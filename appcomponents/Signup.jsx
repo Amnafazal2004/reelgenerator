@@ -24,22 +24,25 @@ const Signup = () => {
   async function onSubmit(values) {
 
     console.log(values)
-    try {
-      const { data, error } = await authClient.signUp.email({
-        email: values.email,
-        password: values.password,
-        name: values.name,
-      })
-      if (data) {
-        toast(`Signup successful! Welcome ${data.user.name}`)
-      }
-      else {
-        toast("Signup failed")
-      }
+   try {
+    const response = await authClient.signUp.email({
+      email: values.email,
+      password: values.password,
+      name: values.name,
+    })
+    
+    console.log("Full signup response:", response) // Add this
+    
+    if (response.data) {
+      toast(`Signup successful! Welcome ${response.data.user.name}`)
+    } else {
+      console.log("Signup error:", response.error) // Add this
+      toast("Signup failed")
     }
-    catch (error) {
-      toast("Something went wrong")
-    }
+  } catch (error) {
+    console.error("Signup catch error:", error) // Add this
+    toast("Something went wrong")
+  }
 
 
   }

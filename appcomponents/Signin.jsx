@@ -36,6 +36,8 @@ const Signin = () => {
         rememberMe: true,
       });
 
+        console.log("SignIn response:", { data, error }); // Add this line
+
       if (data) {
         toast(`SignIn successful! Welcome ${data.user.name}`);
       } else {
@@ -98,9 +100,3 @@ const Signin = () => {
 export default Signin
 
 
-// Signup (POST) → new user is created in DB.
-// Signin (POST) → check user in DB → if valid → create session in DB → send back a cookie.
-// So both signup and signin use POST, but for different reasons:
-
-// Signup → insert user.
-// Signin → verify user + insert session.
