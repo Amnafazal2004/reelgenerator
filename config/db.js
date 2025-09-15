@@ -32,7 +32,7 @@ async function connectDB() {
     };
 
     console.log('Connecting to MongoDB...');
-    cached.promise = mongoose.connect(`${process.env.MONGODB_URI}/reelgenerator`, opts)
+    cached.promise = mongoose.connect(`${process.env.MONGODB_URI}`, opts)
       .then((mongoose) => {
         console.log('MongoDB connected successfully');
         return mongoose;

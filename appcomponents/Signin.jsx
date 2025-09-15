@@ -17,26 +17,18 @@ import {
 
 const Signin = () => {
 
+  //this is for shadcn not connected to backhend
   const form = useForm({
     defaultValues: { email: "", password: "" },
   });
 
   const fetchlogin = async (values) => {
-    // const response = await axios.post('/api/sign-in/email',values )
-    // if(response.data){
-    //     toast(`Successfully logged in! ${response.data.user.name}`)
-    // }
-    // else{
-    //   toast("Signin failed")
-    // }
     try {
       const { data, error } = await authClient.signIn.email({
         email: values.email,
         password: values.password,
         rememberMe: true,
       });
-
-        console.log("SignIn response:", { data, error }); // Add this line
 
       if (data) {
         toast(`SignIn successful! Welcome ${data.user.name}`);

@@ -1,6 +1,10 @@
-import { auth, initializeAuth  } from "@/lib/auth"; // path to your auth file
-import { toNextJsHandler } from "better-auth/next-js";
+// app/api/auth/[...all]/route.js
+import { auth } from "@/lib/auth"
 
-await initializeAuth()
-//betterauth will handle everything on its own
-export const { POST, GET } = toNextJsHandler(auth);
+export async function GET(request) {
+  return auth.handler(request)
+}
+
+export async function POST(request) {
+  return auth.handler(request)
+}

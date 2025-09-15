@@ -4,16 +4,27 @@ import { Input } from '@/components/ui/input'
 import { Button } from "@/components/ui/button";
 import axios from 'axios';
 import { toast } from 'sonner';
+import { useReelContext } from '@/Context/ReelContext';
 //we are uploading to cloud first and then sending the urls to backhend so it will reduce upload time
 
 const Checker = () => {
 
-    const [prompt, setprompt] = useState("");
+    const [prompt, setprompt] = useState([])
     const [thevideos, setthevideos] = useState([]);
+    const {setshowlogin, userid} = useReelContext();
 
 
     const submitHandler = async (e) => {
         e.preventDefault();
+
+         console.log("userid from context:", userid);
+    
+    if (!userid) {
+        toast("User not logged in");
+        return;
+    }
+
+        openaihandler();
 
         //uploading videos on cloudinary
         const uploadResults = await Promise.all(
@@ -26,28 +37,41 @@ const Checker = () => {
                     "https://api.cloudinary.com/v1_1/dpzq24rxs/video/upload",
                     formData1
                 );
-                return res.data.secure_url; // Get the video URL
+                return res.data.secure_url // Get the video URL 
                 //the urls would be stored in uploadresults
             })
         );
 
         const formData = new FormData();
-        formData.append('prompt', prompt);
+        formData.append("prompt", prompt)
+        formData.append('userid', userid);
         uploadResults.forEach((url) => formData.append("videos", url))
 
+
         try {
-            const { data } = await axios.post("/api/input", formData, { headers: { "Content-Type": "multipart/form-data" } })
+            const { data } = await axios.post("/api/input", formData)
             console.log("here")
             if (data.success) {
                 toast(data.message)
-                setprompt("")
-                setvideos([])
             }
         }
         catch (error) {
             toast("Not uploaded")
         }
 
+    }
+       const openaihandler = async () => {
+        try{
+            const result = await axios.post('api/ai', {
+                prompt: prompt
+            })
+            if(result.data.success){
+                console.log(result.data.text)
+            }
+        }
+        catch(error){
+            console.log("Response error: ", error.message)
+        }
     }
 
     const handlefileselect = (e) => {
@@ -63,8 +87,11 @@ const Checker = () => {
         )
     }
 
+ 
+
     return (
         <div>
+            <Button onClick= {()=>setshowlogin(true)}>Profile</Button>
             <h1 className='font-bold text-center text-4xl'>Reels Generator</h1>
             <form onSubmit={submitHandler}>
                 <h2>Prompts</h2>

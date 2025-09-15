@@ -2,17 +2,21 @@ import mongoose from "mongoose";
 
 const Schema = new mongoose.Schema({
     prompt:{
+        type: Array,
+        required:true,
+    },
+    userid:{
         type: String,
         required: true,
+
     },
     videos:{
         type:Array
-
     }
    
    
 })
 
-const InputModel = mongoose.models.input || mongoose.model('input', Schema)
+const InputModel = mongoose.models.Input || mongoose.model('Input', Schema)
 
 export default InputModel;
