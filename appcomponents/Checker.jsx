@@ -12,6 +12,7 @@ const Checker = () => {
     const [prompt, setprompt] = useState([])
     const [thevideos, setthevideos] = useState([]);
     const {setshowlogin, userid} = useReelContext();
+    let uploadResults;
 
 
     const submitHandler = async (e) => {
@@ -24,10 +25,10 @@ const Checker = () => {
         return;
     }
 
-        openaihandler();
+     
 
         //uploading videos on cloudinary
-        const uploadResults = await Promise.all(
+          uploadResults = await Promise.all(
             thevideos.map(async (file) => {
                 const formData1 = new FormData();
                 formData1.append("file", file);
@@ -42,14 +43,17 @@ const Checker = () => {
             })
         );
 
-        const formData = new FormData();
-        formData.append("prompt", prompt)
-        formData.append('userid', userid);
-        uploadResults.forEach((url) => formData.append("videos", url))
+        const uploadingdata = {
+            prompt: prompt,
+            userid : userid,
+            videos: uploadResults,
+            
+        }
+        console.log(uploadResults)
 
 
         try {
-            const { data } = await axios.post("/api/input", formData)
+            const { data } = await axios.post("/api/input", uploadingdata)
             console.log("here")
             if (data.success) {
                 toast(data.message)
@@ -58,13 +62,18 @@ const Checker = () => {
         catch (error) {
             toast("Not uploaded")
         }
-
+   openaihandler();
     }
        const openaihandler = async () => {
         try{
-            const result = await axios.post('api/ai', {
-                prompt: prompt
-            })
+        //    const data = {
+        //     prompt : prompt,
+        //     videos: thevideos,
+        //    }
+           const formData = new FormData();
+           formData.append("prompt", prompt)
+           thevideos.forEach((video)=> formData.append("videos", video))
+            const result = await axios.post('api/ai', formData)
             if(result.data.success){
                 console.log(result.data.text)
             }
@@ -73,7 +82,7 @@ const Checker = () => {
             console.log("Response error: ", error.message)
         }
     }
-
+//FormData for files, JSON for URLs/text!
     const handlefileselect = (e) => {
         const selectedfiles = Array.from(e.target.files);
         //now since multiple files can be selected so we change the slectedfiles we get into array and put it into slectedfiles array
@@ -132,3 +141,18 @@ const Checker = () => {
 }
 
 export default Checker
+
+
+// Cloudinary Upload (FormData needed):
+
+// Input: Actual file objects from user's device
+// Purpose: Upload binary file data
+// Method: FormData (handles binary data)
+// Output: Gets back URL strings
+
+// Database Save (JSON better):
+
+// Input: URL strings from Cloudinary
+// Purpose: Save metadata and references
+// Method: JSON (simple text data)
+// Output: Database record created

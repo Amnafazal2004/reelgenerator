@@ -6,11 +6,8 @@ import InputModel from "@/models/InputModel"
 export async function POST(request) {
    console.log('API route hit');
     try{
-        const formData = await request.formData()
-         console.log('Form data received');
-        const prompt = formData.get("prompt") 
-        const userid = formData.get("userid")  
-        const videos = formData.getAll("videos")
+        const {prompt, userid, videos} = await request.json()
+       
 
         if(!videos || videos.length === 0) {
             return NextResponse.json({success: false, message: "video not uploaded"})

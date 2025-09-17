@@ -12,6 +12,7 @@ const ReelContextProvider = (props) => {
     const [showlogin,setshowlogin] = useState(false)
     const { data: session, isLoading} = useSession()
     const [userid,setuserid] = useState();
+   
 
     const getuserinfo = () => {
       if(session?.user){
