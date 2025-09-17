@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from "@/components/ui/button";
 import axios from 'axios';
@@ -11,24 +11,38 @@ const Checker = () => {
 
     const [prompt, setprompt] = useState([])
     const [thevideos, setthevideos] = useState([]);
-    const {setshowlogin, userid} = useReelContext();
-    let uploadResults;
+    const { setshowlogin, userid } = useReelContext();
+    const [input, setinput] = useState([])
+    const [existingdata, setexistingdata] = useState(false);
+    const [dataid,setdataid]= useState("");
+    let uploadResults ;
 
+        const fetchinputdata = async () => {
+            const { data } = await axios.get('/api/products/allproducts');
+            console.log("got it")
+            setinput(data.input);
+            console.log(data.input);
+        }
+  useEffect(() => {
+            if (userid) {
+                fetchinputdata();
+            }
+        }, [userid])
+  
 
     const submitHandler = async (e) => {
         e.preventDefault();
 
-         console.log("userid from context:", userid);
-    
-    if (!userid) {
-        toast("User not logged in");
-        return;
-    }
+        console.log("userid from context:", userid);
 
-     
+        if (!userid) {
+            toast("User not logged in");
+            return;
+        }
+
 
         //uploading videos on cloudinary
-          uploadResults = await Promise.all(
+        uploadResults = await Promise.all(
             thevideos.map(async (file) => {
                 const formData1 = new FormData();
                 formData1.append("file", file);
@@ -45,44 +59,68 @@ const Checker = () => {
 
         const uploadingdata = {
             prompt: prompt,
-            userid : userid,
+            userid: userid,
             videos: uploadResults,
-            
+
         }
         console.log(uploadResults)
 
+        input.forEach((data) => {
+            if (data.userid === userid) {
+                console.log("true")
+                setexistingdata(true)
+                console.log("true as weelll")
+                setdataid(data._id);
+            }
+            else{ 
+                setexistingdata(false) 
+            }
 
-        try {
-            const { data } = await axios.post("/api/input", uploadingdata)
-            console.log("here")
-            if (data.success) {
-                toast(data.message)
+        })
+
+        if (existingdata) {
+            await axios.put('/api/input', {
+                id: dataid,
+                prompt: prompt,
+                videos: uploadResults,
+            });
+
+        }
+        else {
+            try {
+                const { data } = await axios.post("/api/input", uploadingdata)
+                console.log("here")
+                if (data.success) {
+                    toast(data.message)
+                }
+            }
+            catch (error) {
+                toast("Not uploaded")
             }
         }
-        catch (error) {
-            toast("Not uploaded")
-        }
-   openaihandler();
-    }
-       const openaihandler = async () => {
-        try{
-        //    const data = {
-        //     prompt : prompt,
-        //     videos: thevideos,
-        //    }
-           const formData = new FormData();
-           formData.append("prompt", prompt)
-           thevideos.forEach((video)=> formData.append("videos", video))
+
+        openaihandler();
+
+    const openaihandler = async () => {
+        try {
+            //    const data = {
+            //     prompt : prompt,
+            //     videos: thevideos,
+            //    }
+            const formData = new FormData();
+            formData.append("prompt", prompt)
+            thevideos.forEach((video) => formData.append("videos", video))
             const result = await axios.post('api/ai', formData)
-            if(result.data.success){
+            if (result.data.success) {
                 console.log(result.data.text)
             }
         }
-        catch(error){
+        catch (error) {
             console.log("Response error: ", error.message)
         }
     }
-//FormData for files, JSON for URLs/text!
+}
+    //FormData for files, JSON for URLs/text!
     const handlefileselect = (e) => {
         const selectedfiles = Array.from(e.target.files);
         //now since multiple files can be selected so we change the slectedfiles we get into array and put it into slectedfiles array
@@ -95,12 +133,12 @@ const Checker = () => {
         }
         )
     }
+     
 
- 
 
     return (
         <div>
-            <Button onClick= {()=>setshowlogin(true)}>Profile</Button>
+            <Button onClick={() => setshowlogin(true)}>Profile</Button>
             <h1 className='font-bold text-center text-4xl'>Reels Generator</h1>
             <form onSubmit={submitHandler}>
                 <h2>Prompts</h2>
@@ -138,8 +176,8 @@ const Checker = () => {
             </form>
         </div>
     )
-}
 
+}
 export default Checker
 
 
