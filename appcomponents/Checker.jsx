@@ -18,17 +18,35 @@ const Checker = () => {
     let uploadResults ;
 
         const fetchinputdata = async () => {
-            const { data } = await axios.get('/api/products/allproducts');
+            const { data } = await axios.get('/api/input');
             console.log("got it")
             setinput(data.input);
             console.log(data.input);
         }
-  useEffect(() => {
-            if (userid) {
-                fetchinputdata();
-            }
-        }, [userid])
+//   useEffect(() => {
+//             if (userid) {
+//                 fetchinputdata();
+//             }
+//         }, [userid])
   
+            const openaihandler = async () => {
+        try {
+            //    const data = {
+            //     prompt : prompt,
+            //     videos: thevideos,
+            //    }
+            const formData = new FormData();
+            formData.append("prompt", prompt)
+            thevideos.forEach((video) => formData.append("videos", video))
+            const result = await axios.post('api/ai', formData)
+            if (result.data.success) {
+                console.log(result.data.text)
+            }
+        }
+        catch (error) {
+            console.log("Response error: ", error.message)
+        }
+    }
 
     const submitHandler = async (e) => {
         e.preventDefault();
@@ -65,7 +83,12 @@ const Checker = () => {
         }
         console.log(uploadResults)
 
+        fetchinputdata();
+
         input.forEach((data) => {
+            console.log("hi me here")
+            console.log("data user id", data.userid)
+            console.log("userid", userid)
             if (data.userid === userid) {
                 console.log("true")
                 setexistingdata(true)
@@ -92,6 +115,7 @@ const Checker = () => {
                 console.log("here")
                 if (data.success) {
                     toast(data.message)
+                    openaihandler();
                 }
             }
             catch (error) {
@@ -99,26 +123,9 @@ const Checker = () => {
             }
         }
 
-        openaihandler();
+       
 
-    const openaihandler = async () => {
-        try {
-            //    const data = {
-            //     prompt : prompt,
-            //     videos: thevideos,
-            //    }
-            const formData = new FormData();
-            formData.append("prompt", prompt)
-            thevideos.forEach((video) => formData.append("videos", video))
-            const result = await axios.post('api/ai', formData)
-            if (result.data.success) {
-                console.log(result.data.text)
-            }
-        }
-        catch (error) {
-            console.log("Response error: ", error.message)
-        }
-    }
+
 }
     //FormData for files, JSON for URLs/text!
     const handlefileselect = (e) => {

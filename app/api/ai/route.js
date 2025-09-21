@@ -284,14 +284,12 @@ export async function POST(request) {
     })
 
     contentParts.push(prompt);
-    contentParts.push(`${prompt} + ${analyzedInstruction}`);
+    contentParts.push(`${analyzedInstruction}`);
 
     // Generate content using the processed files
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: createUserContent(contentParts),
-
-
     });
 
     return NextResponse.json({
