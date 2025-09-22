@@ -9,32 +9,21 @@ import { useReelContext } from '@/Context/ReelContext';
 
 const Checker = () => {
 
-    const [prompt, setprompt] = useState([])
+    const [prompt, setprompt] = useState("")
     const [thevideos, setthevideos] = useState([]);
     const { setshowlogin, userid } = useReelContext();
-    const [input, setinput] = useState([])
-    const [existingdata, setexistingdata] = useState(false);
-    const [dataid,setdataid]= useState("");
-    let uploadResults ;
+    let uploadResults, getinput, dataid, existingdata = false;
+   
+    const fetchinputdata = async () => {
+        const { data } = await axios.get('/api/input');
+        console.log("got it")
+        getinput = data.input;
+        console.log(data.input);
+    }
 
-        const fetchinputdata = async () => {
-            const { data } = await axios.get('/api/input');
-            console.log("got it")
-            setinput(data.input);
-            console.log(data.input);
-        }
-//   useEffect(() => {
-//             if (userid) {
-//                 fetchinputdata();
-//             }
-//         }, [userid])
-  
-            const openaihandler = async () => {
+    const openaihandler = async () => {
         try {
-            //    const data = {
-            //     prompt : prompt,
-            //     videos: thevideos,
-            //    }
+           
             const formData = new FormData();
             formData.append("prompt", prompt)
             thevideos.forEach((video) => formData.append("videos", video))
@@ -83,30 +72,39 @@ const Checker = () => {
         }
         console.log(uploadResults)
 
-        fetchinputdata();
+        await fetchinputdata();
 
-        input.forEach((data) => {
-            console.log("hi me here")
-            console.log("data user id", data.userid)
-            console.log("userid", userid)
-            if (data.userid === userid) {
-                console.log("true")
-                setexistingdata(true)
-                console.log("true as weelll")
-                setdataid(data._id);
-            }
-            else{ 
-                setexistingdata(false) 
-            }
+        console.log("eheh", getinput)
 
-        })
+        if (getinput.length !== 0) {
+            getinput.forEach((data) => {
+                console.log("hi me here")
+                console.log("data user id", data.userid)
+                console.log("userid", userid)
+                if (data.userid === userid) {
+                    console.log("true")
+                    existingdata = true
+                    console.log("true as weelll")
+                    dataid = data._id
+                }
+            })
+        }
+        else {
+            existingdata = false
+        }
+
 
         if (existingdata) {
-            await axios.put('/api/input', {
+            console.log("existin ", existingdata)
+           const {data} =  await axios.put('/api/input', {
                 id: dataid,
                 prompt: prompt,
                 videos: uploadResults,
             });
+            if(data.success){
+                toast("prompt added")
+                await openaihandler()
+            }
 
         }
         else {
@@ -115,7 +113,7 @@ const Checker = () => {
                 console.log("here")
                 if (data.success) {
                     toast(data.message)
-                    openaihandler();
+                    await openaihandler();
                 }
             }
             catch (error) {
@@ -123,10 +121,11 @@ const Checker = () => {
             }
         }
 
-       
 
 
-}
+
+    }
+
     //FormData for files, JSON for URLs/text!
     const handlefileselect = (e) => {
         const selectedfiles = Array.from(e.target.files);
@@ -140,8 +139,6 @@ const Checker = () => {
         }
         )
     }
-     
-
 
     return (
         <div>

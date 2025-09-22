@@ -8,6 +8,7 @@ export async function POST(request) {
    try {
       const { prompt, userid, videos } = await request.json()
 
+      console.log(prompt,userid, videos)
 
       if (!videos || videos.length === 0) {
          return NextResponse.json({ success: false, message: "video not uploaded" })
@@ -43,10 +44,14 @@ export async function PUT(request) {
 
   const input = await InputModel.findByIdAndUpdate(
     id,
-    { $push: { prompt: prompt } },  //to push in an array
-    { $push: { videos: videos } },
+    { 
+    $push: { 
+      prompt: prompt,
+      videos: { $each: videos } // ensures array merge instead of replacing
+    } 
+  },
     { new: true }
   );
 
-  return NextResponse.json(input);
+  return NextResponse.json({success: true, input});
 }
