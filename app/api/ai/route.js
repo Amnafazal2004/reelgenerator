@@ -95,7 +95,7 @@ Return a JSON object following the exact schema provided, ensuring:
           "metadata": {
             "title": "string",
             "description": "string", 
-            "duration": number,
+            "duration": number (not float),
             "style": "aesthetic|cinematic|trendy|minimal",
             "trend": "current_trend_name"
           },
@@ -185,6 +185,10 @@ Return a JSON object following the exact schema provided, ensuring:
 
         CRITICAL RULES:
         - Output ONLY valid JSON, no explanations
+        - Each clip's startTime must exactly match the previous clip's endTime.
+        - For every clip: endTime = startTime + duration.  
+        - The last clip's endTime must equal metadata.duration.  
+         -Do not include any markdown formatting, backticks, or extra text.
         - All numbers must be realistic values
         - Clip names: video1, video2, etc.
         - Duration must be 15-30 seconds total
@@ -284,7 +288,7 @@ export async function POST(request) {
     })
 
     contentParts.push(prompt);
-    contentParts.push(`${analyzedInstruction}`);
+    contentParts.push(analyzedInstruction);
 
     // Generate content using the processed files
     const response = await ai.models.generateContent({

@@ -12,6 +12,7 @@ const ReelContextProvider = (props) => {
     const [showlogin,setshowlogin] = useState(false)
     const { data: session, isLoading} = useSession()
     const [userid,setuserid] = useState();
+    const [reelData, setreelData] = useState("")
    
 
     const getuserinfo = () => {
@@ -34,7 +35,7 @@ const ReelContextProvider = (props) => {
 
 
   const contextValue = {
-    setshowlogin,showlogin,userid
+    setshowlogin,showlogin,userid, reelData,setreelData
   }
 
 

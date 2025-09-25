@@ -5,15 +5,39 @@ import { Button } from "@/components/ui/button";
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useReelContext } from '@/Context/ReelContext';
+import { useRouter } from 'next/navigation';
 //we are uploading to cloud first and then sending the urls to backhend so it will reduce upload time
 
 const Checker = () => {
 
     const [prompt, setprompt] = useState("")
     const [thevideos, setthevideos] = useState([]);
-    const { setshowlogin, userid } = useReelContext();
-    let uploadResults, getinput, dataid, existingdata = false;
-   
+    const { setshowlogin, userid, setreelData } = useReelContext();
+    const router = useRouter()
+    const [showVideo, setShowVideo] = useState(false);
+
+    let uploadResults, getinput, dataid, existingdata = false, openaireply;
+
+    const sendvideosforediting = async () => {
+        try {
+
+            const formData = new FormData();
+            formData.append("openaireply", openaireply)
+            uploadResults.forEach((url) => formData.append("videosurl", url))
+            const { data } = await axios.post('api/editing', formData)
+            if (data.success) {
+                toast("your video is downloaded, going for editing!")
+                router.push('/reelediting')
+            }
+        }
+        catch (error) {
+            console.log("Response error: ", error.message)
+        }
+
+
+
+    }
+
     const fetchinputdata = async () => {
         const { data } = await axios.get('/api/input');
         console.log("got it")
@@ -23,13 +47,18 @@ const Checker = () => {
 
     const openaihandler = async () => {
         try {
-           
+
             const formData = new FormData();
             formData.append("prompt", prompt)
             thevideos.forEach((video) => formData.append("videos", video))
             const result = await axios.post('api/ai', formData)
             if (result.data.success) {
                 console.log(result.data.text)
+                openaireply = result.data.text
+                const cleanjsonRaw = openaireply.replace("```json", "").replace("```", "")
+                const openaireply2 = JSON.parse(cleanjsonRaw)
+                setreelData(openaireply2)
+
             }
         }
         catch (error) {
@@ -96,14 +125,16 @@ const Checker = () => {
 
         if (existingdata) {
             console.log("existin ", existingdata)
-           const {data} =  await axios.put('/api/input', {
+            const { data } = await axios.put('/api/input', {
                 id: dataid,
                 prompt: prompt,
                 videos: uploadResults,
             });
-            if(data.success){
+            if (data.success) {
                 toast("prompt added")
                 await openaihandler()
+                await sendvideosforediting()
+
             }
 
         }
@@ -114,6 +145,7 @@ const Checker = () => {
                 if (data.success) {
                     toast(data.message)
                     await openaihandler();
+                    await sendvideosforediting();
                 }
             }
             catch (error) {
@@ -156,8 +188,6 @@ const Checker = () => {
                         <>
                             <label htmlFor="fileInput">Choose more files</label>
                             <Input onChange={handlefileselect}
-
-
                                 accept="video/*" type='file' multiple id="fileInput" hidden></Input>
                         </> : <></>
                     }
@@ -177,7 +207,11 @@ const Checker = () => {
 
                 </div>
                 <Button type="submit" size="lg" className="rounded-4xl">Click me</Button>
+
             </form>
+            <div>
+
+            </div>
         </div>
     )
 
