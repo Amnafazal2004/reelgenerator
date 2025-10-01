@@ -21,6 +21,7 @@ async function connectDB() {
       maxPoolSize: 10,                // Up to 10 concurrent connections
       serverSelectionTimeoutMS: 10000, // 10 sec to find a server
       socketTimeoutMS: 45000,          // 45 sec before killing idle socket
+   
     };
 
     console.log("Connecting to MongoDB...");

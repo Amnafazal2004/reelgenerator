@@ -8,7 +8,7 @@ export async function POST(request) {
    try {
       const { prompt, userid, videos } = await request.json()
 
-      console.log(prompt,userid, videos)
+      console.log(prompt, userid, videos)
 
       if (!videos || videos.length === 0) {
          return NextResponse.json({ success: false, message: "video not uploaded" })
@@ -31,27 +31,32 @@ export async function POST(request) {
 
 export async function GET() {
    await connectDB();
-
-   const input = await InputModel.find({});
-   return NextResponse.json({ input })
+   try {
+      const input = await InputModel.find({});
+      return NextResponse.json({ input })
+   }
+   catch(error){
+      console.log(error)
+   }
+  
 
 }
 
 export async function PUT(request) {
-  await connectDB();
+   await connectDB();
 
-  const { id, prompt, videos } = await request.json();
+   const { id, prompt, videos } = await request.json();
 
-  const input = await InputModel.findByIdAndUpdate(
-    id,
-    { 
-    $push: { 
-      prompt: prompt,
-      videos: { $each: videos } // ensures array merge instead of replacing
-    } 
-  },
-    { new: true }
-  );
+   const input = await InputModel.findByIdAndUpdate(
+      id,
+      {
+         $push: {
+            prompt: prompt,
+            videos: { $each: videos } // ensures array merge instead of replacing
+         }
+      },
+      { new: true }
+   );
 
-  return NextResponse.json({success: true, input});
+   return NextResponse.json({ success: true, input });
 }
