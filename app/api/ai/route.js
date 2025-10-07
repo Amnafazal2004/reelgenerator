@@ -120,7 +120,7 @@ Return ONLY valid JSON following this EXACT schema:
         "rotation": number
       },
       "transitions": {
-          "type": "fade|slide_right|slide_left|slide_bottom|slide_up|zoom_in|none",
+          "type": "fadeout|fadein|slide_right|slide_left|slide_bottom|slide_up|zoom_in|none",
           "startTime": number,
           "endTime": number,
           "duration": number,
@@ -159,7 +159,9 @@ Return ONLY valid JSON following this EXACT schema:
           "y": number
         },
         "animation": {
-          "type": "typewriter|fade|slide|bounce",
+          "type": "typewriter|fadeout|fadein|slide|bounce",
+          'startTime': number,
+          'endTime': number,
           "duration": number,
           "delay": number
         },
@@ -190,18 +192,70 @@ Return ONLY valid JSON following this EXACT schema:
 
 🚨 CRITICAL RULES - THESE MUST BE STRICTLY FOLLOWED:
 
-SMOOTH INSTAGRAM-STYLE FLOW (NO TRANSITIONS):
-- Apply IDENTICAL color grading to all clips:
-  * brightness: 10
-  * contrast: 15
-  * saturation: 10
-- Keep clips 3-5 seconds each for good rhythm
-- Match lighting/exposure across all clips
-- This creates smooth visual flow naturally
 
-TEXT OVERLAYS:
-   - Only add extra text if user requests it(except the main headline) or if it adds real value
-   - ALL text must have x: "center" for proper centering
+TEXT OVERLAY RULES (VERY IMPORTANT):
+- DEFAULT: Include ONLY 1 main headline text overlay
+- DO NOT add captions, subtitles, or extra text unless user explicitly requests them
+- Extra text reduces aesthetic appeal - keep it minimal
+- If user says "add text about..." or "include caption" - then add it, otherwise NO extra text
+- If the user said to add caption underneath the headline or underneath anything then dont put too much gap between them
+- You need to balance the gaps between the texts proeperly
+- The main headline (or caption if user said to add it) should start from 0 unless specified by the user differently
+- The text should disappears right when the first video ends(unless explicitly requested by user), apply a fade-out effect lasting 0.5 to 1.0 seconds.
+- The fade-out should start slightly before the text's end timing.
+- Example Starttime = 4 and end time = 5 and duration = 1
+- Use '"animation": { "type": "fadeout", "duration": 1.0, "delay": 0 }' to create the fade-out effect.
+- The text should not instantly disappear; it should smoothly fade away. (unless user explicitly said different thing)
+
+TEXT POSITIONING:
+-The text has to be in center, unless the user explicilty requests some other position 
+- For CENTER of screen: x: "center", y: 850
+- For TOP: x: "center", y: 200-350
+- For BOTTOM: x: "center", y: 1600-1750
+-the Font size of main heading has to be bigger than the caption (unless the user specified differently)
+-the font weight of main heading should be bolder than the caption or other texts (unless specified by the user differently)
+-the positioning have to be according to the clips vibe and 2025 trends(can be mostly in center of the screen unless specified differntly by user)
+-when the text disappears, main heading and caption should disppear together (unless specified differently)
+
+
+🎨 COLOR GRADING - APPLY ONLY IF USER REQUESTS (Values: -100 to +100):
+
+CRITICAL: Set ALL color grading values to 0 UNLESS user explicitly requests color grading or a specific aesthetic style.
+
+DEFAULT (No color grading requested):
+- brightness: 0
+- contrast: 0
+- saturation: 0
+- temperature: 0
+- tint: 0
+
+IF USER REQUESTS "SOFT AESTHETIC" or "WARM" color grading:
+- brightness: 8 to 15
+- contrast: -3 to 5
+- saturation: -12 to -3
+- temperature: 18 to 28
+- tint: 2 to 8
+
+IF USER REQUESTS "GOLDEN HOUR" or "WARM VIBES":
+- brightness: 10 to 18
+- contrast: 5 to 12
+- saturation: -8 to 0
+- temperature: 25 to 35
+- tint: 5 to 12
+
+IF USER REQUESTS "CINEMATIC" or "MOODY":
+- brightness: -5 to 5
+- contrast: 15 to 22
+- saturation: -18 to -8
+- temperature: 5 to 15
+- tint: -5 to 3
+
+COLOR GRADING RULES:
+- DEFAULT to ALL ZEROS (no color grading) unless user specifies
+- Only apply color grading when user explicitly requests it
+- If applied, keep values CONSISTENT across all clips (max ±3 variation)
+- User mentions like "aesthetic", "warm", "cinematic" = apply appropriate preset
+
 
 CLIP USAGE RULES:
 - Each video clip (video1, video2, video3, etc.) can ONLY be used ONCE in the entire timeline
@@ -219,15 +273,6 @@ FONT SELECTION RULES (CRITICAL):
 - Font names must be EXACTLY as written in the approved list
 - Consider readability and aesthetic appeal for social media
 
-TEXT POSITIONING:
-- For CENTER of screen: x: "center", y: 960
-- For TOP: x: "center", y: 200-350
-- For BOTTOM: x: "center", y: 1600-1750
--the Font size of main heading has to be bigger than the caption (unless the user specified differently)
--the font weight of main heading should be bolder than the caption or other texts (unless specified by the user differently)
--the positioning have to be according to the clips vibe and 2025 trends(can be mostly in center of the screen unless specified differntly by user)
--when the text disappears, main heading and caption should disppear together (unless specified differently)
-
 TRANSITION RULES (VERY IMPORTANT):  
 - DEFAULT: Set ALL transitions to "none"
 - ONLY add actual transitions if the user EXPLICITLY requests them in their prompt
@@ -235,12 +280,14 @@ TRANSITION RULES (VERY IMPORTANT):
 TRANSITION DURATION:
 - Use decimals: 0.5 for quick, 0.7 for medium, 1.0 for slow
 - Recommended: 0.5-0.7 seconds for smooth flow
+
 TIMING CALCULATION RULES:
 - Each clip's startTime must exactly match the previous clip's endTime
 - Each clip's endTime = startTime + duration
 -the clips start/end timing have to be in order liek this (0->5)(5->9)(9-11)
 - Total reel duration: 15-30 seconds maximum
 - Assign durations thoughtfully based on content engagement, NOT randomly
+- Make sure the duration of a video in the reel is not greater than the actual length of that video clip
 
 CLIP ORDERING STRATEGY:
 - Analyze each clip's content, mood, and visual appeal
@@ -249,9 +296,6 @@ CLIP ORDERING STRATEGY:
 - Consider: lighting, energy level, visual composition, story progression
 - Create a sequence that builds engagement and matches the aesthetic goal
 -It has to be very smooth going from one clip to another 
-
-COLOR GRADIING:
--do not get the colors to be too dark nor too bright
 
 IMPORTANT: Do not just place clips sequentially without thought. Instead:
 - The first 2-3 seconds must be a hook to grab viewers immediately

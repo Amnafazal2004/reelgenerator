@@ -22,12 +22,10 @@ const Checker = () => {
         try {
 
             const formData = new FormData();
-            formData.append("openaireply", openaireply)
             uploadResults.forEach((url) => formData.append("videosurl", url))
             const { data } = await axios.post('api/editing', formData)
             if (data.success) {
                 toast("your video is downloaded, going for editing!")
-                router.push('/reelediting')
             }
         }
         catch (error) {
@@ -58,6 +56,7 @@ const Checker = () => {
                 const cleanjsonRaw = openaireply.replace("```json", "").replace("```", "")
                 const openaireply2 = JSON.parse(cleanjsonRaw)
                 setreelData(openaireply2)
+                router.push('/reelediting')
 
             }
         }
@@ -100,6 +99,10 @@ const Checker = () => {
 
         }
         console.log(uploadResults)
+        openaihandler().catch(err => console.error("AI Error:", err));
+        console.log('bro yahan')
+        sendvideosforediting().catch(err => console.error("Editing Error:", err));
+
 
         await fetchinputdata();
 
@@ -132,8 +135,7 @@ const Checker = () => {
             });
             if (data.success) {
                 toast("prompt added")
-                await openaihandler()
-                await sendvideosforediting()
+
 
             }
 
@@ -144,8 +146,7 @@ const Checker = () => {
                 console.log("here")
                 if (data.success) {
                     toast(data.message)
-                    await openaihandler();
-                    await sendvideosforediting();
+
                 }
             }
             catch (error) {

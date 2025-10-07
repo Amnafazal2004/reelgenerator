@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server"
 import fs from "fs"; //This lets us read/write files on your computer.
 import https from "https"; //built-in Node.js module that lets us make secure web requests (to download stuff from the internet).
-import ffmpeg from "fluent-ffmpeg";
-import { useReelContext } from "@/Context/ReelContext";
+
 
 export async function downloadvideo(url, path){
     return new Promise((resolve, reject)=>{
@@ -29,17 +28,9 @@ export async function POST(request) {
     try {
       
         const formData = await request.formData()
-        const openaireplyRaw = formData.get("openaireply")
         const videosurl = formData.getAll("videosurl")
         console.log("videos in api", videosurl)
 
-        // Parse JSON string to object, as openaireply comes in a string so we need to make it an object 
-        //ai gives the ans as ```json{ }``` whic we have to remove since they are not included in json strcuture
-        const cleanjsonRaw = openaireplyRaw.replace("```json", "").replace("```", "")
-        const openaireply = JSON.parse(cleanjsonRaw)
-        console.log("openai in api", openaireply.metadata.duration)
-        console.log(openaireply)
-      
         let videono = 1;
         for(let i=0;i<videosurl.length;i++){
             let localpath = `./public/video${videono}.mp4`

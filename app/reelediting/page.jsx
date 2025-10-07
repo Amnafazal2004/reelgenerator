@@ -40,7 +40,7 @@ import { useReelContext } from '@/Context/ReelContext';
 import { Player } from '@remotion/player';
 import { useCurrentFrame, Video, interpolate, Easing, useVideoConfig, Sequence } from 'remotion';
 import React, { useEffect } from 'react'
-import { linearTiming, TransitionSeries } from "@remotion/transitions";
+import { spring } from 'remotion';
 import { slide } from "@remotion/transitions/slide";
 import { none } from "@remotion/transitions/none";
 import { fade } from "@remotion/transitions/fade";
@@ -54,25 +54,7 @@ import { fade } from "@remotion/transitions/fade";
 export function ReelVideo({ reelData }) {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig()
-    const currentTime = frame / 30; // 30 FPS
-
-    const getTransitions = (currentScene) => {
-        const transition = currentScene.transitions.type
-        switch (transition) {
-            case "fade":
-                return fade()
-            case "slide_right":
-                return slide({ direction: 'from-right' })
-            case "slide_left":
-                return slide({ direction: 'from-left' })
-            case "slide_bottom":
-                return slide({ direction: 'from-bottom' })
-            case "slide_up":
-                return slide({ direction: 'from-top' })
-            default:
-                return none()
-        }
-    }
+    const currentTime = frame / fps; // 30 FPS
 
 
     // Current text find karo
@@ -113,10 +95,16 @@ export function ReelVideo({ reelData }) {
                     const scale = interpolate(frame, [startFrame, endFrame], [0.5, 1], { easing: Easing.easeOut, extrapolateRight: 'clamp' });
                     sceneStyle.transform = `scale(${scale})`;
                 }
-                if (scene.transitions?.type === "fade") {
+                if (scene.transitions?.type === "fadein") {
                     const startFrame = scene.transitions.startTime * fps;
                     const endFrame = scene.transitions.endTime * fps;
                     const opacity = interpolate(frame, [startFrame, endFrame], [0, 1], { easing: Easing.easeIn, extrapolateRight: "clamp" });
+                    sceneStyle.opacity = opacity;
+                }
+                   if (scene.transitions?.type === "fadeout") {
+                    const startFrame = scene.transitions.startTime * fps;
+                    const endFrame = scene.transitions.endTime * fps;
+                    const opacity = interpolate(frame, [startFrame, endFrame], [1, 0], { easing: Easing.easeOut, extrapolateRight: "clamp" });
                     sceneStyle.opacity = opacity;
                 }
                 // Slide from left
@@ -180,8 +168,9 @@ export function ReelVideo({ reelData }) {
                 }
 
                 // Slight overlap to prevent gaps
-                const startFrame = index === 0 ? 0 : (scene.startTime * fps) - 1;
-                const durationFrames = (scene.duration * fps) + (index === reelData.timeline.length - 1 ? 0 : 1);
+                const overlapFrames = scene.transitions.type === 'none' ? 8 : 4
+                const startFrame = index === 0 ? 0 : (scene.startTime * fps) - overlapFrames;
+                const durationFrames = (scene.duration * fps) + (index === reelData.timeline.length - 1 ? 0 : overlapFrames);
                 return (
                     <div key={index} style={sceneStyle}>
                         <Sequence
@@ -219,12 +208,22 @@ export function ReelVideo({ reelData }) {
                     };
 
                     // fade animation
-                    if (writing.animation?.type === "fade") {
+                    if (writing.animation?.type === "fadein") {
                         const opacity = interpolate(
                             frame,
-                            [writing.timing.start * fps, (writing.timing.start + writing.animation.duration) * fps],
+                            [writing.animation.startTime * fps, (writing.animation.endTime) * fps],
                             [0, 1],
                             { easing: Easing.easeIn, extrapolateRight: "clamp" }
+                        );
+                        Textstyle.opacity = opacity;
+                    }
+                    // fade animation
+                    if (writing.animation?.type === "fadeout") {
+                        const opacity = interpolate(
+                            frame,
+                            [writing.animation.startTime * fps, (writing.animation.endTime) * fps],
+                            [1, 0],
+                            { easing: Easing.easeOut, extrapolateRight: "clamp" }
                         );
                         Textstyle.opacity = opacity;
                     }
@@ -233,7 +232,7 @@ export function ReelVideo({ reelData }) {
                     if (writing.animation?.type === "bounce") {
                         const scale = spring({
                             fps,
-                            frame: frame - writing.timing.start * fps,
+                            frame: frame - writing.animation.startTime * fps,
                             config: {
                                 damping: 6,
                                 stiffness: 120,
@@ -244,7 +243,7 @@ export function ReelVideo({ reelData }) {
 
                     // typewriter animation
                     const textContent = writing.animation?.type === "typewriter"
-                        ? writing.content.slice(0, Math.max(0, frame - writing.timing.start * fps))
+                        ? writing.content.slice(0, Math.max(0, frame - writing.animation.startTime * fps))
                         : writing.content;
 
                     return (
