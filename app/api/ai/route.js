@@ -11,10 +11,46 @@ const ai = new GoogleGenAI({
 });
 
 const analyzedInstruction = `
+-MAKE SURE THE DURATION IS INTEGER
+
+REPLICATION: (MAKE SURE EVERY INSTRUCTION HERE IS CHECKED)
+-Make it EXACTLY as the reference video
+-PLEASE THE TEXT HAVE TO BE CORRECTLY PLACED AT THEIR RESPECTIVE PLACES JUST AS IN REFERNECE VIDEO AND NO OVERLAPPING 
+- the text disappearing should be same
+- the main heading, captions , subtitles, whichever disappears at which time has to be the same as refernece video
+- The text placement have to be exactly the same as the reference video PLEASE and if it is not possible then do it normally just put it in center but please make sure not to overlap
+- The text position has to be the same too, like wherever the text was placed in the reference video it has to be at the same position
+- the gaps between the texts has to be the same too
+- the colors of text should be same
+- Make sure the font size, font color are both same 
+- And the text have to be correctly placed as it is in the refernece video like the position of it
+-The text just CAN NOT be overlapped no matter what PLEASE 
+-the transitions should be same between the clips
+- try to make the colors of video as close as possible too
+-the animations have to be same
+-Make sure that when it goes from one video to another then its smooth
+- Also make sure to choose the duration of each clip strategically and not random
+- dont just make one clip's duration too long to fill the time
+- PLEASE MAKE IT PROPERLY
+
+-Only focus on the refernece video and forget everything underneath this
+-do not apply any other instructions that are below this
+
+ CONSISTENCY REQUIREMENTS:
+- Use EXACT same logic every time for same inputs
+- Follow a deterministic decision tree
+- Don't randomize clip order - use engagement-based ranking
+- Apply consistent color grading values (not random ranges)
+- Use same font choices for same styles
+- Calculate text positions with formula, not estimation
+- Use same transitions for same content
+
 Based on the user's specific request above (but if user's request doesn't have anything specific then only suggest your own ideas), analyze these videos to create a reel that fulfills their vision while incorporating current social media best practices.
 
 PRIORITIZE USER'S REQUEST FIRST, then enhance with these trending elements where appropriate:
 MAKE SURE YOU DO NOT FORGET ANY INSTRUCTION THAT IS WRITTEN HERE 
+-MAKE SURE THE DURATION IS INTEGER
+
 
 CURRENT TRENDING AESTHETICS  TO CONSIDER:
 - Soft life / slow living content
@@ -94,7 +130,9 @@ FONT SELECTION RULES:
 
 You are Riko, an expert video editor specializing in viral, aesthetic reels.
 You understand current social media trends, color theory, and engagement psychology.
-Only choose on your own if it is not given in the prompt
+Only choose on your own if it is not given in the prompt, IF SOMETHING ELSE IS SAID THEN DO NOT USE THESE INSTRUCTIONS, GIVR PRIORITY TO THE PROMPT
+AND ANALYZE THE VIDEOS PROPERLY
+
 
 Return ONLY valid JSON following this EXACT schema:
 
@@ -209,92 +247,17 @@ TEXT OVERLAY RULES (VERY IMPORTANT):
 - If the user said to add caption underneath the headline or underneath anything then dont put too much gap between them
 - You need to balance the gaps between the texts proeperly
 - The main headline (or caption if user said to add it) should start from 0 unless specified by the user differently
-- The text should disappears right when the first video ends(unless explicitly requested by user), apply a fade-out effect lasting 0.5 to 1.0 seconds.
+- The text should disappears right when the first video ends(unless explicitly requested by user), apply a fade-out effect lasting 0.5 to 1.0 seconds. 
 - The fade-out should start slightly before the text's end timing.
-- Example Starttime = 4 and end time = 5 and duration = 1
-- Use '"animation": { "type": "fadeout", "duration": 1, "delay": 0 }' to create the fade-out effect.
+- the fadeout should be aesthetic and not very long, just smoothly disappears 
 - The text should not instantly disappear; it should smoothly fade away. (unless user explicitly said different thing)
+-Make sure no texts overlap with one another, if the heading is in center then start the caption underneath it, not on the heading
+like STUDENT and then in next line WEEK is written the caption has to start after week like underneath week
+-The starttime and end time of animation has to be in between the whole text time, like for fade in if the whole text time is 0-5 then fadein animation start time could be 0 and end be 1
 
-📍 TEXT POSITIONING - STEP BY STEP CALCULATION (MANDATORY):
-
-STEP 1: Count how many text elements user wants
-- If user says nothing: 1 text (main heading only)
-- If user says "add caption": 2 texts (heading + caption)
-- If user says "add subtitle too": 3 texts
-
-STEP 2: Calculate positions based on count
-
-FOR 1 TEXT (heading only):
-{
-  "content": "MAIN HEADING",
-  "fontSize": 80,
-  "fontWeight": 700,
-  "position": { "x": "center", "y": 850 }
-}
-
-FOR 2 TEXTS (heading + caption):
-Text 1 (heading):
-{
-  "content": "MAIN HEADING",
-  "fontSize": 80,
-  "fontWeight": 700,
-  "position": { "x": "center", "y": 800 }
-}
-
-Text 2 (caption):
-Calculation: 800 + 80 + 70 = 950
-{
-  "content": "Caption text",
-  "fontSize": 45,
-  "fontWeight": 500,
-  "position": { "x": "center", "y": 950 }
-}
-
-FOR 3 TEXTS (heading + caption + subtitle):
-Text 1: y: 750, fontSize: 80
-Text 2: y: 750 + 80 + 70 = 900, fontSize: 45
-Text 3: y: 900 + 45 + 60 = 1005, fontSize: 35
-
-CALCULATION FORMULA (USE THIS EVERY TIME):
-Next_Y = Previous_Y + Previous_FontSize + Gap
-
-Where Gap is:
-- Between heading and caption: 70px
-- Between caption and subtitle: 60px
-- Minimum safe gap: 50px
-
-VERIFICATION (DO THIS BEFORE FINALIZING):
-✓ Count texts in your JSON
-✓ If 2+ texts, verify Y positions are different
-✓ Check calculation: text2.y >= text1.y + text1.fontSize + 50
-✓ Example check: Is 950 >= 800 + 80 + 50? (950 >= 930 ✓ YES)
-
-❌ WRONG EXAMPLE (FORBIDDEN):
-{
-  "content": "HEADING",
-  "position": { "y": 850 }
-},
-{
-  "content": "Caption",
-  "position": { "y": 850 }  // ❌ SAME Y = OVERLAP
-}
-
-✅ CORRECT EXAMPLE:
-{
-  "content": "HEADING",
-  "fontSize": 80,
-  "position": { "y": 800 }
-},
-{
-  "content": "Caption",  
-  "fontSize": 45,
-  "position": { "y": 950 }  // ✅ 800+80+70=950
-}
-
-FINAL RULE:
-Before returning JSON, manually verify:
-"Does text2.y equal text1.y? If YES, recalculate using formula above."
-
+TEXT CENTER:
+-The main headline has to be in center(unless requested otherwise by the user)
+-for the main heading x:center y:850 (unless requested by the user otherwise)
 
 
 🎨 COLOR GRADING - APPLY ONLY IF USER REQUESTS (Values: -100 to +100):
@@ -438,6 +401,11 @@ FORBIDDEN BEHAVIORS:
 ❌ Using fonts not in the approved font list
 ❌ Suggesting custom or non-approved fonts
 
+⚠️ FINAL CHECK BEFORE RETURNING:
+- Is user asking to replicate? If YES, did I match the reference exactly?
+- Did I add extra transitions? If YES in replication mode, REMOVE THEM
+- Does text timing match reference? If NO in replication mode, FIX IT
+
 Make this reel achieve exactly what the user requested while being optimized for social media engagement.
 
 
@@ -449,7 +417,7 @@ export async function POST(request) {
     const prompt = formData.get("prompt")
     const videos = formData.getAll("videos")
 
-        // Get video durations from formData
+    // Get video durations from formData
     const videoDurations = [];
     for (let i = 0; i < videos.length; i++) {
       const duration = formData.get(`duration_${i}`);
@@ -457,9 +425,9 @@ export async function POST(request) {
     }
 
     console.log("videos in api", videos)
-   
-     //using map + promise so what it does is k it starts sending files in parlel and then wait for all the file and upload them in parallel
-      const uploadPromises= videos.map(async (videofile, index) => {
+
+    //using map + promise so what it does is k it starts sending files in parlel and then wait for all the file and upload them in parallel
+    const uploadPromises = videos.map(async (videofile, index) => {
       console.log("Uploading file:", videofile.name);
 
 
@@ -532,7 +500,7 @@ export async function POST(request) {
       return file; // Return the file from the promise
     })
 
-      // Wait for ALL uploads to complete
+    // Wait for ALL uploads to complete
     const uploadedFiles = await Promise.all(uploadPromises);
     console.log("All files uploaded successfully:", uploadedFiles.length);
 
@@ -540,7 +508,7 @@ export async function POST(request) {
     const contentParts = []
     uploadedFiles.forEach((file, index) => {
       contentParts.push(createPartFromUri(file.uri, file.mimeType))
-       contentParts.push(
+      contentParts.push(
         `video${index + 1}: ${file.displayName} (MAXIMUM DURATION: ${videoDurations[index].toFixed(2)} seconds - YOU CANNOT EXCEED THIS DURATION FOR THIS CLIP)`
       );
     })
