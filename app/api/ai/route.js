@@ -14,6 +14,7 @@ const analyzedInstruction = `
 Based on the user's specific request above (but if user's request doesn't have anything specific then only suggest your own ideas), analyze these videos to create a reel that fulfills their vision while incorporating current social media best practices.
 
 PRIORITIZE USER'S REQUEST FIRST, then enhance with these trending elements where appropriate:
+MAKE SURE YOU DO NOT FORGET ANY INSTRUCTION THAT IS WRITTEN HERE 
 
 CURRENT TRENDING AESTHETICS  TO CONSIDER:
 - Soft life / slow living content
@@ -192,6 +193,13 @@ Return ONLY valid JSON following this EXACT schema:
 
 🚨 CRITICAL RULES - THESE MUST BE STRICTLY FOLLOWED:
 
+ CRITICAL VIDEO DURATION RULES (MUST FOLLOW):
+- Each video has a MAXIMUM DURATION specified in its description
+- EXAMPLE: "video1: clip.mp4 (MAXIMUM DURATION: 5.5 seconds)"
+- If video1 has max 5.5s, you can use: 2s, 3s, 4s, or 5.5s
+- You CANNOT use: 6s, 7s, 8s, or ANY duration longer than the maximum
+- Exceeding this will cause PLAYBACK ERRORS and BREAK THE REEL
+- ALWAYS check the maximum duration in the video description before assigning clip duration
 
 TEXT OVERLAY RULES (VERY IMPORTANT):
 - DEFAULT: Include ONLY 1 main headline text overlay
@@ -204,18 +212,89 @@ TEXT OVERLAY RULES (VERY IMPORTANT):
 - The text should disappears right when the first video ends(unless explicitly requested by user), apply a fade-out effect lasting 0.5 to 1.0 seconds.
 - The fade-out should start slightly before the text's end timing.
 - Example Starttime = 4 and end time = 5 and duration = 1
-- Use '"animation": { "type": "fadeout", "duration": 1.0, "delay": 0 }' to create the fade-out effect.
+- Use '"animation": { "type": "fadeout", "duration": 1, "delay": 0 }' to create the fade-out effect.
 - The text should not instantly disappear; it should smoothly fade away. (unless user explicitly said different thing)
 
-TEXT POSITIONING:
--The text has to be in center, unless the user explicilty requests some other position 
-- For CENTER of screen: x: "center", y: 850
-- For TOP: x: "center", y: 200-350
-- For BOTTOM: x: "center", y: 1600-1750
--the Font size of main heading has to be bigger than the caption (unless the user specified differently)
--the font weight of main heading should be bolder than the caption or other texts (unless specified by the user differently)
--the positioning have to be according to the clips vibe and 2025 trends(can be mostly in center of the screen unless specified differntly by user)
--when the text disappears, main heading and caption should disppear together (unless specified differently)
+📍 TEXT POSITIONING - STEP BY STEP CALCULATION (MANDATORY):
+
+STEP 1: Count how many text elements user wants
+- If user says nothing: 1 text (main heading only)
+- If user says "add caption": 2 texts (heading + caption)
+- If user says "add subtitle too": 3 texts
+
+STEP 2: Calculate positions based on count
+
+FOR 1 TEXT (heading only):
+{
+  "content": "MAIN HEADING",
+  "fontSize": 80,
+  "fontWeight": 700,
+  "position": { "x": "center", "y": 850 }
+}
+
+FOR 2 TEXTS (heading + caption):
+Text 1 (heading):
+{
+  "content": "MAIN HEADING",
+  "fontSize": 80,
+  "fontWeight": 700,
+  "position": { "x": "center", "y": 800 }
+}
+
+Text 2 (caption):
+Calculation: 800 + 80 + 70 = 950
+{
+  "content": "Caption text",
+  "fontSize": 45,
+  "fontWeight": 500,
+  "position": { "x": "center", "y": 950 }
+}
+
+FOR 3 TEXTS (heading + caption + subtitle):
+Text 1: y: 750, fontSize: 80
+Text 2: y: 750 + 80 + 70 = 900, fontSize: 45
+Text 3: y: 900 + 45 + 60 = 1005, fontSize: 35
+
+CALCULATION FORMULA (USE THIS EVERY TIME):
+Next_Y = Previous_Y + Previous_FontSize + Gap
+
+Where Gap is:
+- Between heading and caption: 70px
+- Between caption and subtitle: 60px
+- Minimum safe gap: 50px
+
+VERIFICATION (DO THIS BEFORE FINALIZING):
+✓ Count texts in your JSON
+✓ If 2+ texts, verify Y positions are different
+✓ Check calculation: text2.y >= text1.y + text1.fontSize + 50
+✓ Example check: Is 950 >= 800 + 80 + 50? (950 >= 930 ✓ YES)
+
+❌ WRONG EXAMPLE (FORBIDDEN):
+{
+  "content": "HEADING",
+  "position": { "y": 850 }
+},
+{
+  "content": "Caption",
+  "position": { "y": 850 }  // ❌ SAME Y = OVERLAP
+}
+
+✅ CORRECT EXAMPLE:
+{
+  "content": "HEADING",
+  "fontSize": 80,
+  "position": { "y": 800 }
+},
+{
+  "content": "Caption",  
+  "fontSize": 45,
+  "position": { "y": 950 }  // ✅ 800+80+70=950
+}
+
+FINAL RULE:
+Before returning JSON, manually verify:
+"Does text2.y equal text1.y? If YES, recalculate using formula above."
+
 
 
 🎨 COLOR GRADING - APPLY ONLY IF USER REQUESTS (Values: -100 to +100):
@@ -273,6 +352,22 @@ FONT SELECTION RULES (CRITICAL):
 - Font names must be EXACTLY as written in the approved list
 - Consider readability and aesthetic appeal for social media
 
+ FONT SELECTION - TRENDY & AESTHETIC:
+
+HIGH PRIORITY (Use these most):
+- "Poppins" - Rounded, friendly, Instagram favorite
+- "Montserrat" - Clean, modern, versatile
+- "Playfair Display" - Elegant, luxury aesthetic
+- "Inter" - Modern, minimal, clean
+- "Lora" - Elegant quotes, storytelling
+
+SECONDARY OPTIONS:
+- "Quicksand" - Rounded, bubbly aesthetic
+- "DM Sans" - Sleek modern, perfect for captions
+- "Nunito" - Soft, approachable lifestyle
+- "Cormorant Garamond" - Vintage editorial chic
+- "Cinzel" - Dramatic, high-end
+
 TRANSITION RULES (VERY IMPORTANT):  
 - DEFAULT: Set ALL transitions to "none"
 - ONLY add actual transitions if the user EXPLICITLY requests them in their prompt
@@ -287,7 +382,7 @@ TIMING CALCULATION RULES:
 -the clips start/end timing have to be in order liek this (0->5)(5->9)(9-11)
 - Total reel duration: 15-30 seconds maximum
 - Assign durations thoughtfully based on content engagement, NOT randomly
-- Make sure the duration of a video in the reel is not greater than the actual length of that video clip
+
 
 CLIP ORDERING STRATEGY:
 - Analyze each clip's content, mood, and visual appeal
@@ -353,10 +448,18 @@ export async function POST(request) {
     const formData = await request.formData()
     const prompt = formData.get("prompt")
     const videos = formData.getAll("videos")
-    console.log("videos in api", videos)
-    const uploadedFiles = [];
 
-    for (const videofile of videos) {
+        // Get video durations from formData
+    const videoDurations = [];
+    for (let i = 0; i < videos.length; i++) {
+      const duration = formData.get(`duration_${i}`);
+      videoDurations.push(parseFloat(duration));
+    }
+
+    console.log("videos in api", videos)
+   
+     //using map + promise so what it does is k it starts sending files in parlel and then wait for all the file and upload them in parallel
+      const uploadPromises= videos.map(async (videofile, index) => {
       console.log("Uploading file:", videofile.name);
 
 
@@ -386,7 +489,7 @@ export async function POST(request) {
       let file = myfile;
       let retryCount = 1;
       const maxRetries = 10; // Increased retry count
-      const waitTime = 5000; // Reduced wait time to 5 seconds
+      let waitTime = 2000; // Reduced wait time to 2 seconds
 
       while (file.state === "PROCESSING" && retryCount < maxRetries) {
         console.log(`File still processing, waiting ${waitTime / 1000} seconds... (Attempt ${retryCount + 1}/${maxRetries})`);
@@ -416,6 +519,8 @@ export async function POST(request) {
           }
         }
 
+        // Exponential backoff: 2s, 3s, 4s, 5s, then stay at 5s
+        waitTime = Math.min(waitTime + 1000, 5000);
         retryCount++;
       }
 
@@ -424,15 +529,20 @@ export async function POST(request) {
       }
 
       console.log("File is now ACTIVE:", file.name);
-      //when file becomes active then only we give it for further processing
-      uploadedFiles.push(file);
-    }
+      return file; // Return the file from the promise
+    })
+
+      // Wait for ALL uploads to complete
+    const uploadedFiles = await Promise.all(uploadPromises);
+    console.log("All files uploaded successfully:", uploadedFiles.length);
 
     // Create content parts for the API request
     const contentParts = []
     uploadedFiles.forEach((file, index) => {
       contentParts.push(createPartFromUri(file.uri, file.mimeType))
-      contentParts.push(`video ${index + 1}: ${file.displayName}`)
+       contentParts.push(
+        `video${index + 1}: ${file.displayName} (MAXIMUM DURATION: ${videoDurations[index].toFixed(2)} seconds - YOU CANNOT EXCEED THIS DURATION FOR THIS CLIP)`
+      );
     })
 
     contentParts.push(prompt);

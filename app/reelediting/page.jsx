@@ -41,9 +41,6 @@ import { Player } from '@remotion/player';
 import { useCurrentFrame, Video, interpolate, Easing, useVideoConfig, Sequence } from 'remotion';
 import React, { useEffect } from 'react'
 import { spring } from 'remotion';
-import { slide } from "@remotion/transitions/slide";
-import { none } from "@remotion/transitions/none";
-import { fade } from "@remotion/transitions/fade";
 
 
 

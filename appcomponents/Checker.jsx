@@ -43,12 +43,46 @@ const Checker = () => {
         console.log(data.input);
     }
 
+    const getVideoDuration = (file) => {
+    return new Promise((resolve) => {
+        //We’re making an invisible <video> element purely for reading metadata. It’s not displayed — just exists in memory.
+        const video = document.createElement('video');
+        //This means the browser won’t load the full video (which could be huge) —it will only read header info, like:duration ,width/height, codec info
+        video.preload = 'metadata';
+        
+        video.onloadedmetadata = () => {
+            //We clean up (revokeObjectURL) the temporary file URL.Then we resolve(video.duration) which gives duration in seconds (e.g. 12.34).
+            window.URL.revokeObjectURL(video.src);
+            resolve(video.duration);
+        };
+        
+        video.onerror = () => {
+            resolve(10); // Default to 10 seconds if can't read duration
+        };
+        //This line converts the File object (from <input type="file" />)into a temporary blob URL — so the browser can read it.
+        video.src = URL.createObjectURL(file);
+    });
+};
+
+//Every video file is passed to getVideoDuration.All are processed in parallel using Promise.all.You get an array like [5.43, 12.12, 7.89].
+//and then u just send the videodurations to formdata
+
     const openaihandler = async () => {
         try {
 
             const formData = new FormData();
             formData.append("prompt", prompt)
-            thevideos.forEach((video) => formData.append("videos", video))
+
+               // Get durations for all videos
+            const videoDurations = await Promise.all(
+                thevideos.map(video => getVideoDuration(video))
+            );
+            // Add videos and their durations
+            thevideos.forEach((video, index) => {
+                formData.append("videos", video);
+                formData.append(`duration_${index}`, videoDurations[index].toFixed(2));
+            });
+
             const result = await axios.post('api/ai', formData)
             if (result.data.success) {
                 console.log(result.data.text)
