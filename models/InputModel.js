@@ -12,6 +12,9 @@ const Schema = new mongoose.Schema({
     },
     videos:{
         type:Array
+    },
+    audio:{
+        type:Array
     }
    
    

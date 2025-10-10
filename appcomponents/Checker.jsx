@@ -14,7 +14,7 @@ const Checker = () => {
     const [thevideos, setthevideos] = useState([]);
     const { setshowlogin, userid, setreelData } = useReelContext();
     const router = useRouter()
-    const [showVideo, setShowVideo] = useState(false);
+    const [audio, setaudio] = useState();
 
     let uploadResults, getinput, dataid, existingdata = false, openaireply;
 
@@ -44,28 +44,28 @@ const Checker = () => {
     }
 
     const getVideoDuration = (file) => {
-    return new Promise((resolve) => {
-        //We’re making an invisible <video> element purely for reading metadata. It’s not displayed — just exists in memory.
-        const video = document.createElement('video');
-        //This means the browser won’t load the full video (which could be huge) —it will only read header info, like:duration ,width/height, codec info
-        video.preload = 'metadata';
-        
-        video.onloadedmetadata = () => {
-            //We clean up (revokeObjectURL) the temporary file URL.Then we resolve(video.duration) which gives duration in seconds (e.g. 12.34).
-            window.URL.revokeObjectURL(video.src);
-            resolve(video.duration);
-        };
-        
-        video.onerror = () => {
-            resolve(10); // Default to 10 seconds if can't read duration
-        };
-        //This line converts the File object (from <input type="file" />)into a temporary blob URL — so the browser can read it.
-        video.src = URL.createObjectURL(file);
-    });
-};
+        return new Promise((resolve) => {
+            //We’re making an invisible <video> element purely for reading metadata. It’s not displayed — just exists in memory.
+            const video = document.createElement('video');
+            //This means the browser won’t load the full video (which could be huge) —it will only read header info, like:duration ,width/height, codec info
+            video.preload = 'metadata';
 
-//Every video file is passed to getVideoDuration.All are processed in parallel using Promise.all.You get an array like [5.43, 12.12, 7.89].
-//and then u just send the videodurations to formdata
+            video.onloadedmetadata = () => {
+                //We clean up (revokeObjectURL) the temporary file URL.Then we resolve(video.duration) which gives duration in seconds (e.g. 12.34).
+                window.URL.revokeObjectURL(video.src);
+                resolve(video.duration);
+            };
+
+            video.onerror = () => {
+                resolve(10); // Default to 10 seconds if can't read duration
+            };
+            //This line converts the File object (from <input type="file" />)into a temporary blob URL — so the browser can read it.
+            video.src = URL.createObjectURL(file);
+        });
+    };
+
+    //Every video file is passed to getVideoDuration.All are processed in parallel using Promise.all.You get an array like [5.43, 12.12, 7.89].
+    //and then u just send the videodurations to formdata
 
     const openaihandler = async () => {
         try {
@@ -73,7 +73,7 @@ const Checker = () => {
             const formData = new FormData();
             formData.append("prompt", prompt)
 
-               // Get durations for all videos
+            // Get durations for all videos
             const videoDurations = await Promise.all(
                 thevideos.map(video => getVideoDuration(video))
             );
@@ -126,12 +126,7 @@ const Checker = () => {
             })
         );
 
-        const uploadingdata = {
-            prompt: prompt,
-            userid: userid,
-            videos: uploadResults,
-
-        }
+     
         console.log(uploadResults)
         openaihandler().catch(err => console.error("AI Error:", err));
         console.log('bro yahan')
@@ -152,6 +147,7 @@ const Checker = () => {
                     existingdata = true
                     console.log("true as weelll")
                     dataid = data._id
+                    console.log(dataid)
                 }
             })
         }
@@ -162,13 +158,16 @@ const Checker = () => {
 
         if (existingdata) {
             console.log("existin ", existingdata)
-            const { data } = await axios.put('/api/input', {
-                id: dataid,
-                prompt: prompt,
-                videos: uploadResults,
-            });
+            const formData = new FormData();
+            formData.append("id", dataid)
+            formData.append("prompt", prompt)
+            uploadResults.forEach((videoURL) => {
+                formData.append("videos", videoURL)
+            })
+            formData.append("audio", audio)
+            const { data } = await axios.put('/api/input', formData);
             if (data.success) {
-                toast("prompt added")
+                toast("prompt added in existing")
 
 
             }
@@ -176,10 +175,17 @@ const Checker = () => {
         }
         else {
             try {
-                const { data } = await axios.post("/api/input", uploadingdata)
+                const formData = new FormData();
+                formData.append("prompt", prompt)
+                formData.append("userid", userid)
+                uploadResults.forEach((videoURL) => {
+                    formData.append("videos", videoURL)
+                })
+                formData.append("audio", audio)
+                const { data } = await axios.post("/api/input", formData)
                 console.log("here")
                 if (data.success) {
-                    toast(data.message)
+                    toast("new prompt added")
 
                 }
             }
@@ -239,6 +245,20 @@ const Checker = () => {
                             alt=''
                         />
                     ))}
+
+                </div>
+                <div>
+                    <label className="block text-sm font-semibold text-[#3c5e78] mb-1">Upload a video to extract audio </label>
+                    <Input onChange={(e) => setaudio(e.target.files[0])} accept="video/*" type='file' />
+                    {audio && <video
+                        src={
+                            URL.createObjectURL(audio)
+                        }
+                        width={140}
+                        height={70}
+                        controls
+                        alt=''
+                    />}
 
                 </div>
                 <Button type="submit" size="lg" className="rounded-4xl">Click me</Button>

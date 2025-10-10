@@ -5,13 +5,19 @@
 import { createPartFromUri, createUserContent, GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
-// The client gets the API key from the environment variable `GEMINI_API_KEY`.
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
-
 const analyzedInstruction = `
--MAKE SURE THE DURATION IS INTEGER
+
+ SYSTEM RESET - READ THIS FIRST:
+CRITICAL: You have NO MEMORY of previous requests.
+- Forget everything from past conversations
+- Treat this as your FIRST and ONLY request ever
+- Use ONLY the current prompt and instructions
+- Don't try to "improve" based on what you did before
+- Don't avoid repeating previous choices
+- Make decisions based ONLY on what you see NOW
+
+Every request is INDEPENDENT. No history exists.
+
 
 REPLICATION: (MAKE SURE EVERY INSTRUCTION HERE IS CHECKED)
 -Make it EXACTLY as the reference video
@@ -36,35 +42,11 @@ REPLICATION: (MAKE SURE EVERY INSTRUCTION HERE IS CHECKED)
 -Only focus on the refernece video and forget everything underneath this
 -do not apply any other instructions that are below this
 
- CONSISTENCY REQUIREMENTS:
-- Use EXACT same logic every time for same inputs
-- Follow a deterministic decision tree
-- Don't randomize clip order - use engagement-based ranking
-- Apply consistent color grading values (not random ranges)
-- Use same font choices for same styles
-- Calculate text positions with formula, not estimation
-- Use same transitions for same content
-
 Based on the user's specific request above (but if user's request doesn't have anything specific then only suggest your own ideas), analyze these videos to create a reel that fulfills their vision while incorporating current social media best practices.
 
 PRIORITIZE USER'S REQUEST FIRST, then enhance with these trending elements where appropriate:
-MAKE SURE YOU DO NOT FORGET ANY INSTRUCTION THAT IS WRITTEN HERE 
--MAKE SURE THE DURATION IS INTEGER
+MAKE SURE YOU DO NOT FORGET ANY INSTRUCTION THAT IS WRITTEN HERE
 
-
-CURRENT TRENDING AESTHETICS  TO CONSIDER:
-- Soft life / slow living content
-- Golden hour / warm lighting
-- Film grain and vintage filters  
-- Minimal text overlays with aesthetic fonts
-- Smooth transitions (only when explicitly requested)
-- Color grading towards warm, muted tones
-- Quick cuts synchronized with music beats
-- Morning/evening routine content
-- "Get ready with me" style
-- Cozy, hygge vibes
-- Clean girl aesthetic
-- Cottagecore elements
 
 TECHNICAL REQUIREMENTS:
 1. Duration: 15-30 seconds for optimal engagement
@@ -75,22 +57,6 @@ TECHNICAL REQUIREMENTS:
 6. Stabilization: Apply to shaky footage
 7. Audio: Suggest music that matches user's desired vibe
 
-ENGAGEMENT OPTIMIZATION:
-- Start with most captivating moment in first 2 seconds
-- Use jump cuts to maintain energy
-- Include trending audio/music suggestions
-- Add subtle motion graphics or overlays
-- Ensure good pacing - not too slow or fast
-- Include captions for accessibility
-- Suggest hashtag-worthy moments
-
-CONTENT ADAPTATION BASED ON USER PROMPT:
-- If user wants "energetic": Use quick cuts, upbeat transitions (if requested), higher saturation
-- If user wants "calm/peaceful": Use slower pacing, soft transitions (if requested), muted colors  
-- If user wants "professional": Clean cuts, minimal effects, clear text
-- If user wants "trendy/viral": Apply current TikTok/Instagram trends heavily
-- If user wants "cinematic": Use color grading, smooth transitions (if requested), dramatic timing
-- If user wants specific mood/theme: Adapt all elements to match that vision
 
 AESTHETIC FONT SELECTION - CHOOSE ONLY FROM THESE OPTIONS:
 
@@ -140,7 +106,7 @@ Return ONLY valid JSON following this EXACT schema:
   "metadata": {
     "title": "string",
     "description": "string", 
-    "duration": number,
+    "duration": number, (integer)
     "style": "aesthetic|cinematic|trendy|minimal",
     "trend": "current_trend_name"
     backgroundcolor: '#000000' (unless specified by the user)
@@ -240,7 +206,8 @@ Return ONLY valid JSON following this EXACT schema:
 - ALWAYS check the maximum duration in the video description before assigning clip duration
 
 TEXT OVERLAY RULES (VERY IMPORTANT):
-- DEFAULT: Include ONLY 1 main headline text overlay
+- DEFAULT: Include ONLY 1 main headline text overlay(IT HAS TO INCLUDE ATLEAST ONE (unless user specified otherwise))
+-DO NOT add multiple headlines, JUST ADD one headline in the beginning
 - DO NOT add captions, subtitles, or extra text unless user explicitly requests them
 - Extra text reduces aesthetic appeal - keep it minimal
 - If user says "add text about..." or "include caption" - then add it, otherwise NO extra text
@@ -254,6 +221,8 @@ TEXT OVERLAY RULES (VERY IMPORTANT):
 -Make sure no texts overlap with one another, if the heading is in center then start the caption underneath it, not on the heading
 like STUDENT and then in next line WEEK is written the caption has to start after week like underneath week
 -The starttime and end time of animation has to be in between the whole text time, like for fade in if the whole text time is 0-5 then fadein animation start time could be 0 and end be 1
+-just like that for fadeout too, or any other animation make sure the animation start and end time is correct pleaseee
+
 
 TEXT CENTER:
 -The main headline has to be in center(unless requested otherwise by the user)
@@ -401,11 +370,6 @@ FORBIDDEN BEHAVIORS:
 ❌ Using fonts not in the approved font list
 ❌ Suggesting custom or non-approved fonts
 
-⚠️ FINAL CHECK BEFORE RETURNING:
-- Is user asking to replicate? If YES, did I match the reference exactly?
-- Did I add extra transitions? If YES in replication mode, REMOVE THEM
-- Does text timing match reference? If NO in replication mode, FIX IT
-
 Make this reel achieve exactly what the user requested while being optimized for social media engagement.
 
 
@@ -413,6 +377,11 @@ Make this reel achieve exactly what the user requested while being optimized for
 
 export async function POST(request) {
   try {
+    // The client gets the API key from the environment variable `GEMINI_API_KEY`.
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+    });
+
     const formData = await request.formData()
     const prompt = formData.get("prompt")
     const videos = formData.getAll("videos")
@@ -506,6 +475,9 @@ export async function POST(request) {
 
     // Create content parts for the API request
     const contentParts = []
+    contentParts.push(
+      "SYSTEM RESET: Forget all previous requests. Treat this as the first and only request ever."
+    );
     uploadedFiles.forEach((file, index) => {
       contentParts.push(createPartFromUri(file.uri, file.mimeType))
       contentParts.push(

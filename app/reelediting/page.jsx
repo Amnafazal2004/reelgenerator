@@ -265,16 +265,14 @@ export default function VideoPlayer() {
     // const openaireply = JSON.parse(cleanjsonRaw)
     console.log("reelData in VideoPlayer:", reelData);
 
-
-    //make aesthetic student week reel , where there is a fade transition at the end and the font headline
-    //  is big and cinematic font with yellow color and red shadow
+    const duration = Math.round(reelData.metadata.duration)
 
 
     return (
         <div>
             <Player
                 component={() => <ReelVideo reelData={reelData} />}
-                durationInFrames={(reelData.metadata.duration * 30)}
+                durationInFrames={(duration* 30)}
                 compositionWidth={1080}
                 compositionHeight={1920}
                 fps={30}
