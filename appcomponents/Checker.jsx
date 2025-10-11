@@ -12,34 +12,21 @@ const Checker = () => {
 
     const [prompt, setprompt] = useState("")
     const [thevideos, setthevideos] = useState([]);
-    const { setshowlogin, userid, setreelData } = useReelContext();
+    const { setshowlogin, userid, setreelData, setvideoUrls,setaudiourl, audiourl } = useReelContext();
     const router = useRouter()
-    const [audio, setaudio] = useState();
+    const [audio,setaudio] = useState()
+   
 
     let uploadResults, getinput, dataid, existingdata = false, openaireply;
 
-    const sendvideosforediting = async () => {
-        try {
 
-            const formData = new FormData();
-            uploadResults.forEach((url) => formData.append("videosurl", url))
-            const { data } = await axios.post('api/editing', formData)
-            if (data.success) {
-                toast("your video is downloaded, going for editing!")
-            }
-        }
-        catch (error) {
-            console.log("Response error: ", error.message)
-        }
-
-
-
-    }
 
     const fetchinputdata = async () => {
         const { data } = await axios.get('/api/input');
         console.log("got it")
         getinput = data.input;
+        let inputobj = data.input[0]
+       setaudiourl(inputobj.audio.at(-1))
         console.log(data.input);
     }
 
@@ -126,14 +113,16 @@ const Checker = () => {
             })
         );
 
-     
-        console.log(uploadResults)
+       setvideoUrls(uploadResults)
+
+       await fetchinputdata();
+      //  console.log(uploadResults)
         openaihandler().catch(err => console.error("AI Error:", err));
         console.log('bro yahan')
-        sendvideosforediting().catch(err => console.error("Editing Error:", err));
+   //     sendvideosforediting().catch(err => console.error("Editing Error:", err));
 
 
-        await fetchinputdata();
+       
 
         console.log("eheh", getinput)
 

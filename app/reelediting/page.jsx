@@ -38,19 +38,22 @@ import "@fontsource/work-sans";
 
 import { useReelContext } from '@/Context/ReelContext';
 import { Player } from '@remotion/player';
-import { useCurrentFrame, Video, interpolate, Easing, useVideoConfig, Sequence } from 'remotion';
-import React, { useEffect } from 'react'
+import { useCurrentFrame, Video, interpolate, Easing, useVideoConfig, Sequence, Audio } from 'remotion';
+import React from 'react'
 import { spring } from 'remotion';
+import axios from 'axios';
 
-
-
-
+function getvideourls(clip,videourls) {
+    const videono = parseInt(clip.replace('video',''))
+    return videourls[videono-1]
+}
 
 
 // Yeh component JSON ke hisab se video banayega
-export function ReelVideo({ reelData }) {
+export function ReelVideo({ reelData, audiourl }) {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig()
+    const { videoUrls } = useReelContext()
     const currentTime = frame / fps; // 30 FPS
 
 
@@ -58,6 +61,8 @@ export function ReelVideo({ reelData }) {
     const currentTexts = reelData.overlays.text.filter(text =>
         currentTime >= text.timing.start && currentTime < text.timing.end
     );
+
+   
 
 
     return (
@@ -71,6 +76,10 @@ export function ReelVideo({ reelData }) {
 
 
             {reelData.timeline.map((scene, index) => {
+              const video=  getvideourls(scene.clip,videoUrls)
+            
+
+              
 
 
                 let sceneStyle = {
@@ -98,7 +107,7 @@ export function ReelVideo({ reelData }) {
                     const opacity = interpolate(frame, [startFrame, endFrame], [0, 1], { easing: Easing.easeIn, extrapolateRight: "clamp" });
                     sceneStyle.opacity = opacity;
                 }
-                   if (scene.transitions?.type === "fadeout") {
+                if (scene.transitions?.type === "fadeout") {
                     const startFrame = scene.transitions.startTime * fps;
                     const endFrame = scene.transitions.endTime * fps;
                     const opacity = interpolate(frame, [startFrame, endFrame], [1, 0], { easing: Easing.easeOut, extrapolateRight: "clamp" });
@@ -174,15 +183,17 @@ export function ReelVideo({ reelData }) {
                             from={startFrame}
                             durationInFrames={durationFrames}
                         >
-                            <Video src={`/${scene.clip}.mp4`}
+                            <Video src={video}
                                 style={sceneStyle}
                                 pauseWhenBuffering={false}
+                                muted
 
                             />
                         </Sequence>
                     </div>
                 );
-            })}
+            })}   
+             <Audio src={audiourl}/>
 
             {/* Text overlays */}
             {
@@ -259,20 +270,19 @@ export function ReelVideo({ reelData }) {
 //Player is used so it can preview
 export default function VideoPlayer() {
 
-    const { reelData } = useReelContext()
+    const { reelData,audiourl } = useReelContext()
 
     //  const cleanjsonRaw = reelData.replace("```json", "").replace("```", "")
     // const openaireply = JSON.parse(cleanjsonRaw)
     console.log("reelData in VideoPlayer:", reelData);
 
     const duration = Math.round(reelData.metadata.duration)
-
-
+  
     return (
         <div>
             <Player
-                component={() => <ReelVideo reelData={reelData} />}
-                durationInFrames={(duration* 30)}
+                component={() => <ReelVideo reelData={reelData} audiourl={audiourl}/>}
+                durationInFrames={(duration * 30)}
                 compositionWidth={1080}
                 compositionHeight={1920}
                 fps={30}

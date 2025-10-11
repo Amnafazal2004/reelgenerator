@@ -6,6 +6,7 @@ import { createPartFromUri, createUserContent, GoogleGenAI } from "@google/genai
 import { NextResponse } from "next/server";
 
 const analyzedInstruction = `
+"URGENT: List the filename of each video you can see before editing"
 
  SYSTEM RESET - READ THIS FIRST:
 CRITICAL: You have NO MEMORY of previous requests.
@@ -21,13 +22,11 @@ Every request is INDEPENDENT. No history exists.
 
 REPLICATION: (MAKE SURE EVERY INSTRUCTION HERE IS CHECKED)
 -Make it EXACTLY as the reference video
--PLEASE THE TEXT HAVE TO BE CORRECTLY PLACED AT THEIR RESPECTIVE PLACES JUST AS IN REFERNECE VIDEO AND NO OVERLAPPING 
-- the text disappearing should be same
+- when the text disappears in reference video it should disappear just like that in your video
 - the main heading, captions , subtitles, whichever disappears at which time has to be the same as refernece video
 - The text placement have to be exactly the same as the reference video PLEASE and if it is not possible then do it normally just put it in center but please make sure not to overlap
 - The text position has to be the same too, like wherever the text was placed in the reference video it has to be at the same position
 - the gaps between the texts has to be the same too
-- the colors of text should be same
 - Make sure the font size, font color are both same 
 - And the text have to be correctly placed as it is in the refernece video like the position of it
 -The text just CAN NOT be overlapped no matter what PLEASE 
@@ -37,7 +36,6 @@ REPLICATION: (MAKE SURE EVERY INSTRUCTION HERE IS CHECKED)
 -Make sure that when it goes from one video to another then its smooth
 - Also make sure to choose the duration of each clip strategically and not random
 - dont just make one clip's duration too long to fill the time
-- PLEASE MAKE IT PROPERLY
 
 -Only focus on the refernece video and forget everything underneath this
 -do not apply any other instructions that are below this
@@ -395,9 +393,14 @@ export async function POST(request) {
 
     console.log("videos in api", videos)
 
+
+
     //using map + promise so what it does is k it starts sending files in parlel and then wait for all the file and upload them in parallel
     const uploadPromises = videos.map(async (videofile, index) => {
-      console.log("Uploading file:", videofile.name);
+      // Create UNIQUE name with timestamp + random number to prevent any caching
+      const uniqueName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${index}_${videofile.name}`;
+
+      console.log(`Uploading: ${uniqueName}`);
 
 
       // Uploads your video file to Gemini's cloud storage (ai.files.upload)
@@ -413,10 +416,11 @@ export async function POST(request) {
         file: videofile,
         config: {
           mimeType: videofile.type || "video/mp4",
-          displayName: videofile.name,
+          displayName: uniqueName,
           sizeBytes: videofile.size,
         },
       });
+          
 
       if (!myfile || !myfile.name) {
         throw new Error("File upload failed or returned an invalid object.");
@@ -466,24 +470,42 @@ export async function POST(request) {
       }
 
       console.log("File is now ACTIVE:", file.name);
-      return file; // Return the file from the promise
-    })
+
+      // Return both file and its index/duration
+      return {
+        file,
+        index,
+        duration: videoDurations[index],
+        fileName: myfile.name // Store the name for cleanup
+      };
+    });
+
 
     // Wait for ALL uploads to complete
-    const uploadedFiles = await Promise.all(uploadPromises);
-    console.log("All files uploaded successfully:", uploadedFiles.length);
+    const uploadedResults = await Promise.all(uploadPromises);
+    console.log("All files uploaded successfully:", uploadedResults.length);
 
     // Create content parts for the API request
     const contentParts = []
     contentParts.push(
-      "SYSTEM RESET: Forget all previous requests. Treat this as the first and only request ever."
+      `🔄 NEW INDEPENDENT REQUEST
+      Timestamp: ${Date.now()}
+      Session ID: ${Math.random().toString(36).substr(2, 9)}
+      Videos count: ${uploadedResults.length}
+
+      This is a FRESH request. Ignore any previous uploads or responses.
+`
     );
-    uploadedFiles.forEach((file, index) => {
-      contentParts.push(createPartFromUri(file.uri, file.mimeType))
-      contentParts.push(
-        `video${index + 1}: ${file.displayName} (MAXIMUM DURATION: ${videoDurations[index].toFixed(2)} seconds - YOU CANNOT EXCEED THIS DURATION FOR THIS CLIP)`
-      );
-    })
+
+    console.log("uploaded results",uploadedResults)
+
+   
+    uploadedResults.forEach((result, index) => {
+        contentParts.push(createPartFromUri(result.file.uri, result.file.mimeType));
+        contentParts.push(
+          `video${index + 1}: ${result.file.displayName} (MAXIMUM DURATION: ${result.duration.toFixed(2)}s - CANNOT EXCEED)`
+        );
+      });
 
     contentParts.push(prompt);
     contentParts.push(analyzedInstruction);
@@ -493,7 +515,16 @@ export async function POST(request) {
       model: "gemini-2.5-flash",
       contents: createUserContent(contentParts),
     });
-
+     // IMPORTANT: Delete files AFTER processing to prevent reuse
+    console.log("Cleaning up uploaded files...");
+    for (const result of uploadedResults) {
+      try {
+        await ai.files.delete({ name: result.fileName }); // Use fileName property
+        console.log(`✓ Deleted: ${result.fileName}`);
+      } catch (deleteErr) {
+        console.warn(`✗ Failed to delete ${result.fileName}:`, deleteErr.message);
+      }
+    }
     return NextResponse.json({
       text: response.text,
       success: true
