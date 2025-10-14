@@ -6,11 +6,20 @@ import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import { v2 as cloudinary } from "cloudinary"
 const ffmpegPath = "ffmpeg";
 //right now we are using ffmpeg that is installed locally in our computer
 //so to use it in production we need to use install it in docker too
 //make sure to add this command in docker RUN apt-get update && apt-get install -y ffmpeg
 
+
+//configure cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+
+})
 
 
 export async function POST(request) {
@@ -30,7 +39,7 @@ export async function POST(request) {
       }
 
       const audioURL = await audioeditor(audio)
-      console.log(audioURL)
+      console.log("audiourl in post",audioURL)
 
 
       await connectDB()
@@ -71,7 +80,7 @@ async function audioeditor(audio) {
 
    //We wrap this in a Promise so it waits until FFmpeg finishes or errors.
    await new Promise((resolve, reject) => {
-      const ff = spawn(ffmpegPath , [
+      const ff = spawn(ffmpegPath, [
          "-i", inputPath,       // input file
          "-vn",                 // no video
          "-acodec", "libmp3lame", // use mp3 encoder
@@ -83,17 +92,22 @@ async function audioeditor(audio) {
       ff.on("close", (code) => (code === 0 ? resolve() : reject(new Error("FFmpeg failed"))));
    });
 
-   //Read the MP3 file into memory.Convert it to a base64 data URL → which can be used directly in <audio> or Remotion:
-   const audioBuffer = fs.readFileSync(outputPath);
-   const audioBase64 = `data:audio/mp3;base64,${audioBuffer.toString("base64")}`;
+   const result = await cloudinary.uploader.upload(outputPath, {
+      resource_type: "auto",
+      type: "upload",
+       format: "mp3" 
+   });
+
 
    //Deletes temporary input/output files to free up disk space.
    fs.unlinkSync(inputPath);
    fs.unlinkSync(outputPath);
+ 
 
    console.log("baaji going")
-   return audioBase64
-
+   console.log("url", result.secure_url)
+   let theurl = result.secure_url
+   return theurl
 }
 
 export async function PUT(request) {
@@ -107,6 +121,7 @@ export async function PUT(request) {
    const audio = formData.get("audio");
 
    const audioURL = await audioeditor(audio)
+     console.log("audiourl in put",audioURL)
    const input = await InputModel.findByIdAndUpdate(
       id,
       {
@@ -119,5 +134,6 @@ export async function PUT(request) {
       { new: true }
    );
 
-   return NextResponse.json({ success: true, input });
+   return NextResponse.json({ success: true, input, audio:audioURL });
 }
+

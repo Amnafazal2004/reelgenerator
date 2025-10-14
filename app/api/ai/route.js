@@ -302,6 +302,7 @@ TRANSITION RULES (VERY IMPORTANT):
 - DEFAULT: Set ALL transitions to "none"
 - ONLY add actual transitions if the user EXPLICITLY requests them in their prompt
 - When user doesn't mention transitions: ALL transition types = "none"
+- The video should go by smoothly, there not be flashes of black between even if transition is none
 TRANSITION DURATION:
 - Use decimals: 0.5 for quick, 0.7 for medium, 1.0 for slow
 - Recommended: 0.5-0.7 seconds for smooth flow
@@ -346,6 +347,7 @@ Return a JSON object ensuring:
 - Audio suggestions match current trends
 
 OUTPUT FORMAT:
+- THE OUTOUT SHOULD BE EXACTLY THE SAME SCHEMA AS GIVEN
 - Output ONLY valid JSON, no explanations, no markdown, no backticks
 - Return raw JSON object without any formatting or text wrapper
 VALIDATE JSON syntax before returning:
@@ -515,16 +517,7 @@ export async function POST(request) {
       model: "gemini-2.5-flash",
       contents: createUserContent(contentParts),
     });
-     // IMPORTANT: Delete files AFTER processing to prevent reuse
-    console.log("Cleaning up uploaded files...");
-    for (const result of uploadedResults) {
-      try {
-        await ai.files.delete({ name: result.fileName }); // Use fileName property
-        console.log(`✓ Deleted: ${result.fileName}`);
-      } catch (deleteErr) {
-        console.warn(`✗ Failed to delete ${result.fileName}:`, deleteErr.message);
-      }
-    }
+
     return NextResponse.json({
       text: response.text,
       success: true

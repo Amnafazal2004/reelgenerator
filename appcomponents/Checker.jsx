@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from "@/components/ui/button";
 import axios from 'axios';
@@ -12,10 +12,10 @@ const Checker = () => {
 
     const [prompt, setprompt] = useState("")
     const [thevideos, setthevideos] = useState([]);
-    const { setshowlogin, userid, setreelData, setvideoUrls,setaudiourl, audiourl } = useReelContext();
+    const { setshowlogin, userid, setreelData, setvideoUrls, setaudiourl, audiourl } = useReelContext();
     const router = useRouter()
-    const [audio,setaudio] = useState()
-   
+    const [audio, setaudio] = useState()
+
 
     let uploadResults, getinput, dataid, existingdata = false, openaireply;
 
@@ -25,8 +25,6 @@ const Checker = () => {
         const { data } = await axios.get('/api/input');
         console.log("got it")
         getinput = data.input;
-        let inputobj = data.input[0]
-       setaudiourl(inputobj.audio.at(-1))
         console.log(data.input);
     }
 
@@ -54,7 +52,7 @@ const Checker = () => {
     //Every video file is passed to getVideoDuration.All are processed in parallel using Promise.all.You get an array like [5.43, 12.12, 7.89].
     //and then u just send the videodurations to formdata
 
-    const openaihandler = async () => {
+    const openaihandler = async (audio) => {
         try {
 
             const formData = new FormData();
@@ -77,6 +75,7 @@ const Checker = () => {
                 const cleanjsonRaw = openaireply.replace("```json", "").replace("```", "")
                 const openaireply2 = JSON.parse(cleanjsonRaw)
                 setreelData(openaireply2)
+                setaudiourl(audio)
                 router.push('/reelediting')
 
             }
@@ -113,18 +112,16 @@ const Checker = () => {
             })
         );
 
-       setvideoUrls(uploadResults)
-
-       await fetchinputdata();
-      //  console.log(uploadResults)
-        openaihandler().catch(err => console.error("AI Error:", err));
-        console.log('bro yahan')
-   //     sendvideosforediting().catch(err => console.error("Editing Error:", err));
+        setvideoUrls(uploadResults)
 
 
-       
 
+
+
+
+        await fetchinputdata();
         console.log("eheh", getinput)
+
 
         if (getinput.length !== 0) {
             getinput.forEach((data) => {
@@ -157,7 +154,8 @@ const Checker = () => {
             const { data } = await axios.put('/api/input', formData);
             if (data.success) {
                 toast("prompt added in existing")
-
+                console.log(data.audio)
+                await openaihandler(data.audio).catch(err => console.error("AI Error:", err));
 
             }
 
@@ -175,6 +173,8 @@ const Checker = () => {
                 console.log("here")
                 if (data.success) {
                     toast("new prompt added")
+                    console.log(data.audio)
+                    await openaihandler(data.audio).catch(err => console.error("AI Error:", err));
 
                 }
             }
@@ -201,6 +201,7 @@ const Checker = () => {
         }
         )
     }
+
 
     return (
         <div>
@@ -276,3 +277,4 @@ export default Checker
 // Purpose: Save metadata and references
 // Method: JSON (simple text data)
 // Output: Database record created
+
