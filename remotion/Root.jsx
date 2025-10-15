@@ -1,19 +1,23 @@
-import { Composition } from "remotion";
-import { ReelVideo } from '@/app/reelediting/ReelVideo';
-import { useReelContext } from "@/Context/ReelContext";
+import { Composition, registerRoot } from "remotion";
+import { ReelVideo } from '../app/reelediting/ReelVideo';
+
 
 //to download the video
 export const RemotionRoot = () => {
-    const { reelData } = useReelContext()
+
   return (
     <Composition
-      id="MyComposition"
-      durationInFrames={reelData.metadata.duration * 30}
+      id="ReelVideo"
+      component={ReelVideo}
+      durationInFrames={(20)*30}  //will use this value only if reelData is not present in input props
       fps={30}
       width={1920}
       height={1080}
-      component={() => <ReelVideo reelData={reelData} />}
-      //the component part should be the same as Player,  it is whatever u want to make a video of
+      
+      
+      
     />
   );
 };
+
+registerRoot(RemotionRoot);

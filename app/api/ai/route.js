@@ -6,7 +6,6 @@ import { createPartFromUri, createUserContent, GoogleGenAI } from "@google/genai
 import { NextResponse } from "next/server";
 
 const analyzedInstruction = `
-"URGENT: List the filename of each video you can see before editing"
 
  SYSTEM RESET - READ THIS FIRST:
 CRITICAL: You have NO MEMORY of previous requests.

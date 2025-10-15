@@ -1,309 +1,115 @@
-
-
-'use client';
-// Cinematic & Dramatic
-import "@fontsource/montserrat";
-import "@fontsource/playfair-display";
-import "@fontsource/oswald";
-import "@fontsource/crimson-text";
-import "@fontsource/libre-baskerville";
-import "@fontsource/bodoni-moda";
-import "@fontsource/dm-sans";
-import "@fontsource/cormorant-garamond";
-import "@fontsource/montserrat-alternates";
-import "@fontsource/cinzel";
-import "@fontsource/eb-garamond";
-import "@fontsource/quicksand";
-
-// Trendy & Aesthetic
-import "@fontsource/poppins";
-import "@fontsource/inter";
-import "@fontsource/nunito";
-import "@fontsource/source-sans-pro";
-import "@fontsource/lato";
-
-// Vintage & Vibes
-import "@fontsource/merriweather";
-import "@fontsource/lora";
-import "@fontsource/pt-serif";
-import "@fontsource/vollkorn";
-import "@fontsource/alegreya";
-
-// Modern & Minimal
-import "@fontsource/roboto";
-import "@fontsource/open-sans";
-import "@fontsource/raleway";
-import "@fontsource/work-sans";
+"use client"
 
 import { useReelContext } from '@/Context/ReelContext';
 import { Player } from '@remotion/player';
-import { useCurrentFrame, Video, interpolate, Easing, useVideoConfig, Sequence, Audio } from 'remotion';
 import React, { useEffect } from 'react';
-import { spring } from 'remotion';
+import { Button } from "@/components/ui/button";
+import axios from "axios"
+import { ReelVideo } from './ReelVideo';
 
-function getvideourls(clip, videourls) {
-    const videono = parseInt(clip.replace('video', ''))
-    return videourls[videono - 1]
-}
-
-// Yeh component JSON ke hisab se video banayega
-export function ReelVideo({ reelData, audiourl }) {
-    const frame = useCurrentFrame();
-    const { fps } = useVideoConfig()
-    const { videoUrls } = useReelContext()
-    const currentTime = frame / fps; // 30 FPS
-
-    // Current text find karo
-    const currentTexts = reelData.overlays.text.filter(text =>
-        currentTime >= text.timing.start && currentTime < text.timing.end
-    );
-
-    return (
-        <div style={{
-            width: '100%',
-            height: '100%',
-            position: 'relative',
-            backgroundColor: reelData.metadata.backgroundcolor
-        }}>
-            {/* Video scenes */}
-            {reelData.timeline.map((scene, index) => {
-                const video = getvideourls(scene.clip, videoUrls)
-
-                let sceneStyle = {
-                    width: '100%',
-                    height: '100%',
-                    position: 'absolute',
-                    filter: `
-                        brightness(${1 + (scene.effects.color_grading.brightness / 100)})
-                        contrast(${1 + (scene.effects.color_grading.contrast / 100)})
-                        saturate(${1 + (scene.effects.color_grading.saturation / 100)})
-                    `,
-                };
-
-                // Zoom_in effect as transform
-                if (scene.transitions?.type === "zoom_in") {
-                    const startFrame = scene.transitions.startTime * fps;
-                    const endFrame = scene.transitions.endTime * fps;
-                    const scale = interpolate(frame, [startFrame, endFrame], [0.5, 1], { easing: Easing.easeOut, extrapolateRight: 'clamp' });
-                    sceneStyle.transform = `scale(${scale})`;
-                }
-                if (scene.transitions?.type === "fadein") {
-                    const startFrame = scene.transitions.startTime * fps;
-                    const endFrame = scene.transitions.endTime * fps;
-                    const opacity = interpolate(frame, [startFrame, endFrame], [0, 1], { easing: Easing.easeIn, extrapolateRight: "clamp" });
-                    sceneStyle.opacity = opacity;
-                }
-                if (scene.transitions?.type === "fadeout") {
-                    const startFrame = scene.transitions.startTime * fps;
-                    const endFrame = scene.transitions.endTime * fps;
-                    const opacity = interpolate(frame, [startFrame, endFrame], [1, 0], { easing: Easing.easeOut, extrapolateRight: "clamp" });
-                    sceneStyle.opacity = opacity;
-                }
-                if (scene.transitions?.type === "slide_left") {
-                    const startFrame = scene.transitions.startTime * fps;
-                    const endFrame = scene.transitions.endTime * fps;
-                    const translateX = interpolate(
-                        frame,
-                        [startFrame, endFrame],
-                        [-1920, 0],
-                        { easing: Easing.outExpo, extrapolateRight: "clamp" }
-                    );
-                    sceneStyle.transform = `translateX(${translateX}px)`;
-                }
-                if (scene.transitions?.type === "slide_right") {
-                    const startFrame = scene.transitions.startTime * fps;
-                    const endFrame = scene.transitions.endTime * fps;
-                    const translateX = interpolate(
-                        frame,
-                        [startFrame, endFrame],
-                        [1920, 0],
-                        { easing: Easing.outExpo, extrapolateRight: "clamp" }
-                    );
-                    sceneStyle.transform = `translateX(${translateX}px)`;
-                }
-                if (scene.transitions?.type === "slide_bottom") {
-                    const startFrame = scene.transitions.startTime * fps;
-                    const endFrame = scene.transitions.endTime * fps;
-                    const translateY = interpolate(
-                        frame,
-                        [startFrame, endFrame],
-                        [1920, 0],
-                        { easing: Easing.outExpo, extrapolateRight: "clamp" }
-                    );
-                    sceneStyle.transform = `translateY(${translateY}px)`;
-                }
-                if (scene.transitions?.type === "slide_up") {
-                    const startFrame = scene.transitions.startTime * fps;
-                    const endFrame = scene.transitions.endTime * fps;
-                    const translateY = interpolate(
-                        frame,
-                        [startFrame, endFrame],
-                        [-1920, 0],
-                        { easing: Easing.outExpo, extrapolateRight: "clamp" }
-                    );
-                    sceneStyle.transform = `translateY(${translateY}px)`;
-                }
-
-                const overlapFrames = scene.transitions.type === 'none' ? 8 : 4
-                const startFrame = index === 0 ? 0 : (scene.startTime * fps) - overlapFrames;
-                const durationFrames = (scene.duration * fps) + (index === reelData.timeline.length - 1 ? 0 : overlapFrames);
-
-                return (
-                    <div key={index} style={sceneStyle}>
-                        <Sequence
-                            from={startFrame}
-                            durationInFrames={durationFrames}
-                        >
-                            <Video
-                                src={video}
-                                style={sceneStyle}
-                                pauseWhenBuffering={false}
-                                muted
-                            />
-                        </Sequence>
-                    </div>
-                );
-            })}
-            {audiourl && (
-                <Audio
-                    src={audiourl}
-                     volume={1}
-                />
-            )}
-
-            {/* Text overlays */}
-            {currentTexts.map((writing, index) => {
-                let Textstyle = {
-                    position: 'absolute',
-                    left: writing.position.x === 'center' ? '50%' : writing.position.x,
-                    top: writing.position.y,
-                    transform: writing.position.x === 'center' ? 'translateX(-50%)' : 'none',
-                    fontFamily: writing.font,
-                    fontSize: writing.fontSize,
-                    fontWeight: writing.fontWeight,
-                    lineHeight: '1.3',
-                    textAlign: 'center',
-                    maxWidth: '85%',
-                    color: writing.color,
-                    textShadow: '0 2px 20px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.4)',
-                    zIndex: 10,
-                    wordWrap: 'break-word'
-                };
-
-                if (writing.animation?.type === "fadein") {
-                    const opacity = interpolate(
-                        frame,
-                        [writing.animation.startTime * fps, (writing.animation.endTime) * fps],
-                        [0, 1],
-                        { easing: Easing.easeIn, extrapolateRight: "clamp" }
-                    );
-                    Textstyle.opacity = opacity;
-                }
-                if (writing.animation?.type === "fadeout") {
-                    const opacity = interpolate(
-                        frame,
-                        [writing.animation.startTime * fps, (writing.animation.endTime) * fps],
-                        [1, 0],
-                        { easing: Easing.easeOut, extrapolateRight: "clamp" }
-                    );
-                    Textstyle.opacity = opacity;
-                }
-                if (writing.animation?.type === "bounce") {
-                    const scale = spring({
-                        fps,
-                        frame: frame - writing.animation.startTime * fps,
-                        config: {
-                            damping: 6,
-                            stiffness: 120,
-                        },
-                    });
-                    Textstyle.transform += ` scale(${scale})`;
-                }
-
-                const textContent = writing.animation?.type === "typewriter"
-                    ? writing.content.slice(0, Math.max(0, frame - writing.animation.startTime * fps))
-                    : writing.content;
-
-                return (
-                    <div key={index} style={Textstyle}>
-                        {textContent}
-                    </div>
-                );
-            })}
-        </div>
-    );
-}
 
 export default function VideoPlayer() {
-    const { reelData, audiourl } = useReelContext()
+    const { reelData, audiourl, videoUrls } = useReelContext()
     const duration = Math.round(reelData.metadata.duration)
     const [playerRef, setPlayerRef] = React.useState(null);
+    const title = reelData.metadata.title
     const audioRef = React.useRef(null);
 
-    // Sync audio with video player
-    useEffect(() => {
-        if (!playerRef || !audioRef.current) return;
+    const handleDownload = async () => {
+        const response = await axios.post(`/api/rendervideo?title=${encodeURIComponent(title)}`,{
+            reelData,
+            audiourl, 
+            videoUrls
+        }, {
+            responseType: "blob",
+        })
+       
+      if (response.data.success) {
+            const videoUrl = response.data.reelurl;
+            
+            // Step 2: Fetch video as blob
+            const videoResponse = await fetch(videoUrl);
+            const blob = await videoResponse.blob();
+            
+            // Step 3: Trigger download
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${title}.mp4`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        }
 
-        const audio = audioRef.current;
+}
 
-        const handlePlay = () => {
-            audio.currentTime = 0; // restart audio from beginning
-            audio.play().catch(() => { }); // ignore autoplay errors
-        };
+// Sync audio with video player
+useEffect(() => {
+    if (!playerRef || !audioRef.current) return;
 
-        const handlePause = () => {
-            audio.pause();
-        };
+    const audio = audioRef.current;
 
-        const handleSeek = () => {
-            audio.currentTime = playerRef.current?.getCurrentFrame() / 30; // sync position to frame
-        };
+    const handlePlay = () => {
+        audio.currentTime = 0; // restart audio from beginning
+        audio.play().catch(() => { }); // ignore autoplay errors
+    };
 
-        const handleEnded = () => {
-            audio.pause();
-            audio.currentTime = 0; // reset after ending
-        };
+    const handlePause = () => {
+        audio.pause();
+    };
 
-        playerRef.addEventListener?.('play', handlePlay);
-        playerRef.addEventListener?.('pause', handlePause);
-        playerRef.addEventListener?.('seeked', handleSeek);
-        playerRef.addEventListener?.('ended', handleEnded);
+    const handleSeek = () => {
+        audio.currentTime = playerRef.current?.getCurrentFrame() / 30; // sync position to frame
+    };
 
-        return () => {
-            playerRef.removeEventListener?.('play', handlePlay);
-            playerRef.removeEventListener?.('pause', handlePause);
-            playerRef.removeEventListener?.('seeked', handleSeek);
-            playerRef.removeEventListener?.('ended', handleEnded);
-        };
-    }, [playerRef]);
+    const handleEnded = () => {
+        audio.pause();
+        audio.currentTime = 0; // reset after ending
+    };
 
-    return (
-        <div>
+    playerRef.addEventListener?.('play', handlePlay);
+    playerRef.addEventListener?.('pause', handlePause);
+    playerRef.addEventListener?.('seeked', handleSeek);
+    playerRef.addEventListener?.('ended', handleEnded);
+
+    return () => {
+        playerRef.removeEventListener?.('play', handlePlay);
+        playerRef.removeEventListener?.('pause', handlePause);
+        playerRef.removeEventListener?.('seeked', handleSeek);
+        playerRef.removeEventListener?.('ended', handleEnded);
+    };
+}, [playerRef]);
+
+return (
+    <div>
 
 
-            {/* Hidden audio element as backup */}
-            {audiourl && !audioRef.current && (
-                <audio ref={audioRef} src={audiourl} preload="auto" style={{ display: 'none' }} />
-            )}
+        {/* Hidden audio element as backup */}
+        {audiourl && !audioRef.current && (
+            <audio ref={audioRef} src={audiourl} preload="auto" style={{ display: 'none' }} />
+        )}
 
 
-            <Player
-                ref={setPlayerRef}
-                component={() => <ReelVideo reelData={reelData} audiourl={audiourl} />}
-                durationInFrames={(duration * 30)}
-                compositionWidth={1080}
-                compositionHeight={1920}
-                fps={30}
-                controls
-                clickToPlay
-                autoPlay={false}
-                style={{
-                    width: 300,
-                    height: 500
-                }}
-            />
-        </div>
-    );
+        <Player
+            ref={setPlayerRef}
+            component={ReelVideo}
+            inputProps={{reelData,audiourl,videoUrls}}
+            durationInFrames={(duration * 30)}
+            compositionWidth={1080}
+            compositionHeight={1920}
+            fps={30}
+            controls
+            clickToPlay
+            autoPlay={false}
+            style={{
+                width: 300,
+                height: 500
+            }}
+        />
+        <Button onClick={handleDownload} >Download</Button>
+    </div>
+);
 }
 
 
