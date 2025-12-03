@@ -1,0 +1,21 @@
+
+services:
+  client:
+    build: ./client  #the folder which has all the files
+    ports: 
+    - 3000:3000
+    env_file: 
+    - ./client/.env.production
+    # volumes:
+    #   - ./client:/app   # <-- mount local folder to /app in container, so that any changes can be seen 
+    #   #Any changes you make locally in ./client are immediately reflected inside the container at /app.
+
+  render-server:
+    build: ./render-server
+    ports: 
+    - 4000:4000
+    env_file:
+    - ./render-server/.env.production
+    # volumes:
+    #   - ./render-server:/app   # <-- mount local folder to /app in container
+     

@@ -51,7 +51,7 @@ app.post('/render', async (req, res) => {
     // Bundle only once (yeh pehli baar slow hoga, phir fast)
     if (!bundleCache) {
       console.log('[Bundle] Creating bundle...');
-      const entry = path.join(process.cwd(), '../remotion/Root.jsx');
+      const entry = path.join(process.cwd(), '../client/remotion/Root.jsx');
       bundleCache = await bundle(entry, () => { }, {
         webpackOverride: (config) => config,
       });

@@ -182,7 +182,7 @@ const Checker = () => {
       formData.append("audio", audio);
 
       const { data } = await axios.post("/api/input", formData);
-      console.log("here");
+      console.log("here", data);
       if (data.success) {
         toast(" prompt added");
         console.log(data.audio);

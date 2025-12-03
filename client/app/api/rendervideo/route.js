@@ -11,7 +11,7 @@ export async function POST(request) {
     console.log("Received render request:", body.title);
     console.log("w/h:", body.width, body.height);
 
-    const renderServerUrl = process.env.RENDER_SERVER_URL || "http://localhost:4000";
+    const renderServerUrl = process.env.NEXT_PUBLIC_RENDER_SERVER_URL || "http://localhost:4000";
 
     const { data } = await axios.post(`${renderServerUrl}/render`, body, {
       headers: { "Content-Type": "application/json" },
