@@ -10,7 +10,7 @@ const TopSection = () => {
   return (
     <div className="bg-black text-white">
       <div className="flex justify-between pt-3 ">
-        <h1 className={`${glikerExpanded.className} text-2xl ml-16 `}>Riko</h1>
+        <h1 className={`${glikerExpanded.className} text-2xl ml-14 `}>Riko</h1>
         <ul className="font-[lexendgiga] flex gap-20 text-[12px] mt-2 opacity-72">
           <li>Home</li>
           <li>Demo</li>
@@ -19,16 +19,20 @@ const TopSection = () => {
         </ul>
         <div>
           <Button className=" text-[10px]">Pricing</Button>
-          <Button className="mr-20 text-[10px]" variant="custom1">
+          <Button className="mr-24 text-[10px]" variant="custom1">
             Login
           </Button>
         </div>
       </div>
 
-      <div className="flex justify-between  ml-16 mr-52">
+      <div className="flex justify-between  ml-20 ">
         <div className="mt-24">
           <div className="relative inline-block">
-            <h1 className={`${glikerExpanded.className} text-[150px] leading-none`}>Riko</h1>
+            <h1
+              className={`${glikerExpanded.className} text-[150px] leading-none`}
+            >
+              Riko
+            </h1>
             <div className="absolute w-64 h-64">
               <Image
                 src={cathero}
@@ -39,20 +43,19 @@ const TopSection = () => {
               />
             </div>
           </div>
-        
-             <p className="opacity-66 font-[lexendgiga] text-[12px]" >
-            Hey, I'm Riko, your new reel-maker. I take your random ideas, 
-            <br></br>
-            half-baked thoughts, and “should I post this?” moments and <br />
-             turn them
-            
-            into clean, aesthetic, scroll-stopping reels in <br />
-             seconds
-          </p>
 
-          
-         
-          <Button className=" text-[12px]" size="lg">
+          <p className="opacity-66 font-[lexendgiga] text-[12px]">
+            Hey, I'm Riko, your new reel-maker. I take your random ideas,
+            half-baked thoughts, and “should I post this?” moments and turn them
+            into clean, aesthetic,  <br /> scroll stopping reels in seconds.
+             I make sure
+            your content looks polished, on-brand, and ready to grab
+            attention without    you stressing over editing apps, <br /> music syncing, or
+            awkward transitions. Whether it’s a quirky snippet from your day, a
+            viral challenge, or that  “oops, I didn’t plan this” moment.
+            
+          </p>
+          <Button className=" text-[12px] mt-3" size="lg">
             Start Now
           </Button>
         </div>
@@ -61,18 +64,17 @@ const TopSection = () => {
             <Image
               src={headerimg11}
               alt="Background"
-              width={200} 
-              height={200} 
+              width={200}
+              height={200}
               className="absolute"
             />
             <Image
               src={headerimg22}
               alt="Overlay"
-              width={256} 
-              height={256} 
+              width={256}
+              height={256}
               className="absolute left-44 top-7"
             />
-            
           </div>
         </div>
       </div>
