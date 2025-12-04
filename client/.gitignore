@@ -26,7 +26,6 @@
 # Public media (videos/images)
 public/*.mp4
 public/*.svg
-Assets/*.png
 
 # Misc
 .DS_Store
