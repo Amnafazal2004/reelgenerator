@@ -16,7 +16,7 @@ export default function VideoPlayer() {
     const audioRef = useRef(null);
     const [width, setwidth] = React.useState(360);
     const [height, setheight] = React.useState(640);
-    const title = reelData.metadata.title
+    const title = reelData?.metadata?.title
 
 
     const choosequality = (num) => {
