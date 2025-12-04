@@ -11,7 +11,7 @@ import { ReelVideo } from './ReelVideo';
 
 export default function VideoPlayer() {
     const { reelData, audiourl, videoUrls, userid, setfreetiercount,freetiercount , email} = useReelContext()
-    const duration = Math.round(reelData?.metadata?.duration)
+    const duration = Math.round(Number(reelData?.metadata?.duration) || 100); // fallback 100
     const playerRef = useRef(null);
     const audioRef = useRef(null);
     const [width, setwidth] = React.useState(360);
@@ -162,7 +162,7 @@ export default function VideoPlayer() {
                     width, 
                     height 
                 }}
-                durationInFrames={( Math.round(reelData?.metadata?.duration) * 30)}
+                durationInFrames={(duration * 30)}
                 compositionWidth={width}      
                 compositionHeight={height}
                 fps={30}
