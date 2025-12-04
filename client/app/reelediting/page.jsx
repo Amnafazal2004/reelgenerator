@@ -10,7 +10,13 @@ import { ReelVideo } from './ReelVideo';
 
 
 export default function VideoPlayer() {
-    const { reelData, audiourl, videoUrls, userid, setfreetiercount,freetiercount , email} = useReelContext()
+    const context = useReelContext();
+    
+    // Guard clause - stop if no data
+    if (!context?.reelData?.metadata) {
+        return <div>Loading or redirecting...</div>;
+    }
+    const { reelData, audiourl, videoUrls, userid, setfreetiercount,freetiercount , email} = context
     const duration = Math.round(Number(reelData?.metadata?.duration) || 100); // fallback 100
     const playerRef = useRef(null);
     const audioRef = useRef(null);
@@ -153,6 +159,7 @@ export default function VideoPlayer() {
             )}
 
             <Player
+                acknowledgeRemotionLicense
                 ref={playerRef}
                 component={ReelVideo}
                 inputProps={{ 
