@@ -162,7 +162,7 @@ export default function VideoPlayer() {
                     width, 
                     height 
                 }}
-                durationInFrames={(duration * 30)}
+                durationInFrames={( Math.round(reelData?.metadata?.duration) * 30)}
                 compositionWidth={width}      
                 compositionHeight={height}
                 fps={30}
