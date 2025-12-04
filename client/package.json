@@ -41,6 +41,7 @@
     "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
     "@polar-sh/nextjs": "^0.4.9",
     "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/react-slot": "^1.2.3",
     "@remotion/bundler": "4.0.353",
     "@remotion/cli": "4.0.353",

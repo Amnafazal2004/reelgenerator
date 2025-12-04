@@ -1,6 +1,7 @@
 "use client"
 import Checker from "@/appcomponents/Checker";
 import Header from "@/appcomponents/Header";
+import TopSection from "@/appcomponents/TopSection";
 import { useReelContext } from '@/Context/ReelContext'
 
 
@@ -11,10 +12,10 @@ export default function Home() {
       {showlogin ?
       <>
         <Header />
-         <Checker />
+         <TopSection />
             </>
           :
-        <Checker />
+        <TopSection />
       }
         
     

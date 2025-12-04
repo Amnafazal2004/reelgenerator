@@ -1,7 +1,9 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Lexend_Giga } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import ReelContextProvider from "@/Context/ReelContext";
+
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -10,6 +12,10 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+const lexendgiga = Lexend_Giga({
+  variable: "--font-lexend-giga",
   subsets: ["latin"],
 });
 
@@ -22,7 +28,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${lexendgiga.variable} ${geistMono.variable}  antialiased`}
       >
           <ReelContextProvider>
         {children}
