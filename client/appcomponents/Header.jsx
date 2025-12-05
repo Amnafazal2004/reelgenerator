@@ -5,7 +5,7 @@ import Signout from './Signout'
 import Signin from './Signin'
 import Signup from './Signup'
 import GoogleSignin from './Googlesignin'
-import Checker from './Checker'
+import Checker from '../app/Panel/Reelgenerator/page'
 
 
 

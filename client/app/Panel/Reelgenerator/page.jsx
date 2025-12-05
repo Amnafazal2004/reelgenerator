@@ -2,36 +2,28 @@
 import React, {  useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { variantid } from "@/components/lemonsqueezyvariables";
 import axios from "axios";
 import { toast } from "sonner";
 import { useReelContext } from "@/Context/ReelContext";
 import { useRouter } from "next/navigation";
-import { getSubscription } from "@lemonsqueezy/lemonsqueezy.js";
+
 //we are uploading to cloud first and then sending the urls to backhend so it will reduce upload time
 
 const Checker = () => {
   const [prompt, setprompt] = useState("");
-  const [plan, setplan] = useState("Free tier");
-  const [subscriptionstatus, setsubscriptionstatus] = useState("free");
-  const [subscriptionId, setsubscriptionId] = useState("");
   const [endat, setendat] = useState("");
-  const [freetierpopup, setfreetierpopup] = useState(false);
   const [freetierended, setfreetierended] = useState(false);
   const [proplanactive, setproplanactive] = useState(false);
   const [updateproplan, setupdateproplan] = useState(false);
   const [cancelproplan, setcancelproplan] = useState(false);
-  const [freetier, setfreetier] = useState(false);
 
   const [thevideos, setthevideos] = useState([]);
   const {
-    setshowlogin,
+   
     userid,
     setreelData,
     setvideoUrls,
     setaudiourl,
-    email,
-    freetiercount,
     setfreetiercount,
   } = useReelContext();
   const router = useRouter();
@@ -87,7 +79,7 @@ const Checker = () => {
         formData.append(`duration_${index}`, videoDurations[index].toFixed(2));
       });
 
-      const result = await axios.post("api/ai", formData);
+      const result = await axios.post("/api/ai", formData);
       if (result.data.success) {
         console.log(result.data.text);
         openaireply = result.data.text;
@@ -121,7 +113,7 @@ const Checker = () => {
       console.log("free");
       console.log(getSubscription[0].freetiercount);
       setfreetiercount(getSubscription[0].freetiercount);
-      setfreetier(true);
+      // setfreetier(true);
     } else if (
       getSubscription[0].subscriptionstatus === "free" &&
       getSubscription[0].freetiercount === 3
@@ -207,51 +199,51 @@ const Checker = () => {
     });
   };
 
-  const handlePurchase = async () => {
-    const { data } = await axios.post("/api/checkout", {
-      variantid,
-      email,
-      subscriptionId,
-      subscriptionstatus,
-      freetiercount,
-      endat,
-    });
-    if (data.success) {
-      console.log("bro");
-      window.location.href = data.url; //for external redirect
-    }
-  };
+  // const handlePurchase = async () => {
+  //   const { data } = await axios.post("/api/checkout", {
+  //     variantid,
+  //     email,
+  //     subscriptionId,
+  //     subscriptionstatus,
+  //     freetiercount,
+  //     endat,
+  //   });
+  //   if (data.success) {
+  //     console.log("bro");
+  //     window.location.href = data.url; //for external redirect
+  //   }
+  // };
 
   //will work only when it is live
   const handlerCustomerPortal = () => {
     window.location.href = " https://reelgenerator.lemonsqueezy.com/billing";
   };
 
-  const handlefreetier = async () => {
-    setfreetier(true);
-    console.log("in free tier");
-    const { data } = await axios.post("/api/freetier", {
-      email,
-      subscriptionId,
-      subscriptionstatus,
-      endat,
-      freetiercount,
-    });
-    if (data.success) {
-      console.log(data.message);
-    }
-  };
+  // const handlefreetier = async () => {
+  //   setfreetier(true);
+  //   console.log("in free tier");
+  //   const { data } = await axios.post("/api/freetier", {
+  //     email,
+  //     subscriptionId,
+  //     subscriptionstatus,
+  //     endat,
+  //     freetiercount,
+  //   });
+  //   if (data.success) {
+  //     console.log(data.message);
+  //   }
+  // };
 
   return (
     <div>
-      <Button onClick={() => setshowlogin(true)}>Profile</Button>
-      <Button onClick={() => setfreetierpopup(true)}>Free Trial</Button>
+      {/* <Button onClick={() => setshowlogin(true)}>Profile</Button> */}
+      {/* <Button onClick={() => setfreetierpopup(true)}>Free Trial</Button>
       {freetierpopup ? (
         <Button onClick={handlefreetier}>Start Free trial Now</Button>
       ) : (
         <></>
       )}
-      <Button onClick={handlePurchase}>Pro Plan</Button>
+      <Button onClick={handlePurchase}>Pro Plan</Button> */}
       <Button onClick={handlerCustomerPortal}>Customer Portal</Button>
       <h1 className="font-bold text-center text-4xl">Reels Generator</h1>
       <form onSubmit={submitHandler}>
