@@ -2,7 +2,6 @@
 import React, { useState,createContext, useContext, useEffect } from 'react'
 import { useSession } from '@/lib/auth-client'
 export const ReelContext = createContext(null);
-import { getStores } from "@lemonsqueezy/lemonsqueezy.js";
 
 
 

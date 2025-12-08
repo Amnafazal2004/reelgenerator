@@ -3,14 +3,18 @@
 
 import { useReelContext } from '@/Context/ReelContext';
 import { Player } from '@remotion/player';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import axios from "axios"
 import { ReelVideo } from './ReelVideo';
-
+import Navbar from '@/appcomponents/Navbar';
+import Footers from '@/appcomponents/Footers';
+import Link from 'next/link';
+import { glikerExpanded, lexendgiga } from '@/lib/fonts';
 
 export default function VideoPlayer() {
     const context = useReelContext();
+
     
     // Guard clause - stop if no data
     if (!context?.reelData?.metadata) {
@@ -22,6 +26,7 @@ export default function VideoPlayer() {
     const audioRef = useRef(null);
     const [width, setwidth] = React.useState(360);
     const [height, setheight] = React.useState(640);
+    const [ready,setready] = useState(false)
     const title = reelData?.metadata?.title
 
 
@@ -41,6 +46,7 @@ export default function VideoPlayer() {
     }
 
     const handleDownload = async () => {
+        setready(true)
         console.log("hi", width, height)
         const { data } = await axios.post(`/api/rendervideo`, {
             title,
@@ -148,8 +154,12 @@ export default function VideoPlayer() {
     }, [audiourl]);
 
     return (
-        <div>
-            {/* Hidden audio for preview - ye preview mein chalega */}
+        <div className='bg-black text-white '>
+            <Navbar/>
+
+          <div  className="mt-10 pb-32 flex flex-col items-center">
+        <div className="pt-8 bg-gradient-to-b from-neutral-800 to-zinc-600 w-[700px] h-[780px] rounded-3xl flex flex-col items-center text-center">
+                {/* Hidden audio for preview - ye preview mein chalega */}
             {audiourl && (
                 <audio 
                     ref={audioRef} 
@@ -158,7 +168,10 @@ export default function VideoPlayer() {
                 />
             )}
 
-            <Player
+            <div className='flex flex-col items-center'>
+                <h1 className={`${glikerExpanded.className} text-2xl pb-8`}>Your reel is ready!</h1>
+                  <Player
+                  className='rounded-4xl'
                 acknowledgeRemotionLicense
                 ref={playerRef}
                 component={ReelVideo}
@@ -181,13 +194,31 @@ export default function VideoPlayer() {
                     height: 500
                 }}
             />
+
             
-            <div className="mt-4 space-x-2">
-                <Button onClick={() => choosequality(1080)}>1080p</Button>
-                <Button onClick={() => choosequality(720)}>720p</Button>
-                <Button onClick={() => choosequality(360)}>360p</Button>
-                <Button onClick={handleDownload}>Download</Button>
+            <div className="mt-10 space-x-2 flex">
+                <Link href="/Panel/Reelgenerator">
+                <Button size="lg" >Go Back</Button>
+                </Link>
+                <Button size="lg" onClick={handleDownload}>Download</Button>
+                
+                
             </div>
+            {ready? 
+                <div className={`${lexendgiga.className} text-[10px] mt-7`}>
+                    <p>Your video is getting downloaded! <br/> It can take up to 2-3 minutes
+                    </p>
+                   
+                </div> : null}
+
+            </div>
+
+
+            </div>
+            </div>
+            
+          <Footers/>
+            
         </div>
     );
 }

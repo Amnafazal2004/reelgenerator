@@ -1,15 +1,25 @@
 "use client";
-import React, {  useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { toast } from "sonner";
 import { useReelContext } from "@/Context/ReelContext";
 import { useRouter } from "next/navigation";
+import Navbar from "@/appcomponents/Navbar";
+import { bricebold, glikerExpanded, lexendgiga } from "@/lib/fonts";
+import plus from "@/Assets/plus.png";
+import send from "@/Assets/send.png";
+import catpanel from "@/Assets/catpanel.png";
+import audioicon from "@/Assets/audio.png";
+import Image from "next/image";
+import Allprojects from "@/appcomponents/Allprojects";
+import Footers from "@/appcomponents/Footers";
 
 //we are uploading to cloud first and then sending the urls to backhend so it will reduce upload time
 
 const Checker = () => {
+  let count = 4;
   const [prompt, setprompt] = useState("");
   const [endat, setendat] = useState("");
   const [freetierended, setfreetierended] = useState(false);
@@ -18,18 +28,17 @@ const Checker = () => {
   const [cancelproplan, setcancelproplan] = useState(false);
 
   const [thevideos, setthevideos] = useState([]);
-  const {
-   
-    userid,
-    setreelData,
-    setvideoUrls,
-    setaudiourl,
-    setfreetiercount,
-  } = useReelContext();
+  const { userid, setreelData, setvideoUrls, setaudiourl, setfreetiercount } =
+    useReelContext();
   const router = useRouter();
   const [audio, setaudio] = useState();
 
   let uploadResults, getSubscription, openaireply;
+      
+    
+      const [projecturls, setprojecturls] = useState("")
+  
+  
 
   const fetchsubsdata = async () => {
     const { data } = await axios.get("/api/freetier");
@@ -121,15 +130,13 @@ const Checker = () => {
       console.log("free ended");
       setfreetierended(true);
       return;
-    }
-    else if (
+    } else if (
       getSubscription[0].subscriptionstatus === "active" ||
       getSubscription[0].subscriptionstatus === "on_trial"
     ) {
       console.log("pro");
       setproplanactive(true);
-    }
-    else if (
+    } else if (
       getSubscription[0].subscriptionstatus === "expired" &&
       getSubscription[0].freetiercount === 3
     ) {
@@ -199,124 +206,111 @@ const Checker = () => {
     });
   };
 
-  // const handlePurchase = async () => {
-  //   const { data } = await axios.post("/api/checkout", {
-  //     variantid,
-  //     email,
-  //     subscriptionId,
-  //     subscriptionstatus,
-  //     freetiercount,
-  //     endat,
-  //   });
-  //   if (data.success) {
-  //     console.log("bro");
-  //     window.location.href = data.url; //for external redirect
-  //   }
-  // };
+  
 
   //will work only when it is live
   const handlerCustomerPortal = () => {
     window.location.href = " https://reelgenerator.lemonsqueezy.com/billing";
   };
 
-  // const handlefreetier = async () => {
-  //   setfreetier(true);
-  //   console.log("in free tier");
-  //   const { data } = await axios.post("/api/freetier", {
-  //     email,
-  //     subscriptionId,
-  //     subscriptionstatus,
-  //     endat,
-  //     freetiercount,
-  //   });
-  //   if (data.success) {
-  //     console.log(data.message);
-  //   }
-  // };
+  
 
   return (
-    <div>
-      {/* <Button onClick={() => setshowlogin(true)}>Profile</Button> */}
-      {/* <Button onClick={() => setfreetierpopup(true)}>Free Trial</Button>
-      {freetierpopup ? (
-        <Button onClick={handlefreetier}>Start Free trial Now</Button>
-      ) : (
-        <></>
-      )}
-      <Button onClick={handlePurchase}>Pro Plan</Button> */}
-      <Button onClick={handlerCustomerPortal}>Customer Portal</Button>
-      <h1 className="font-bold text-center text-4xl">Reels Generator</h1>
-      <form onSubmit={submitHandler}>
-        <h2>Prompts</h2>
-        <Input
-          value={prompt}
-          onChange={(e) => setprompt(e.target.value)}
-          placeholder="write the prompt"
-          type="text"
-        ></Input>
-        <label className="block text-sm font-semibold text-[#3c5e78] mb-1">
-          Upload videos{" "}
-        </label>
+    <div id="Createproject" className="bg-black text-white">
 
-        <div>
-          <Input
-            onChange={handlefileselect}
-            accept="video/*"
-            type="file"
-            multiple
-          />
-          {thevideos.length < 10 && thevideos.length >= 1 ? (
-            <>
-              <label htmlFor="fileInput">Choose more files</label>
+      <Navbar />
+      {/* <Button onClick={handlerCustomerPortal}>Customer Portal</Button> */}
+      <div  className="mt-8 pb-24 flex flex-col items-center">
+        <div className="pt-8 bg-gradient-to-b from-neutral-800 to-zinc-600 w-[700px] h-[550px] rounded-3xl flex flex-col items-center text-center">
+          <p className={`${glikerExpanded.className} text-4xl pb-4 pt-12`}>
+            Got an idea? <br /> Drop it here and we'll turn <br /> it into magic
+          </p>
+
+          <div className="flex flex-col">
+            <div className="absolute top-18.5 left-[245px]">
+              <Image src={catpanel} alt="cat" width={430} height={430} />
+            </div>
+
+            <form onSubmit={submitHandler} className="flex relative mt-10">
+              <label htmlFor="audio">
+                <Image
+                  src={audioicon}
+                  alt="audio"
+                  width={16}
+                  height={16}
+                  className="absolute left-3 top-2 cursor-pointer"
+                />
+              </label>
               <Input
-                onChange={handlefileselect}
+                onChange={(e) => setaudio(e.target.files[0])}
                 accept="video/*"
                 type="file"
-                multiple
-                id="fileInput"
+                id="audio"
                 hidden
-              ></Input>
-            </>
-          ) : (
-            <></>
-          )}
+              />
 
-          {thevideos.map((files, index) => (
-            <video
-              key={index}
-              src={URL.createObjectURL(files)}
-              width={140}
-              height={70}
-              controls
-              alt=""
-            />
-          ))}
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-[#3c5e78] mb-1">
-            Upload a video to extract audio{" "}
-          </label>
-          <Input
-            onChange={(e) => setaudio(e.target.files[0])}
-            accept="video/*"
-            type="file"
-          />
-          {audio && (
-            <video
-              src={URL.createObjectURL(audio)}
-              width={140}
-              height={70}
-              controls
-              alt=""
-            />
-          )}
-        </div>
+              <label htmlFor="videos">
+                <Image
+                  src={plus}
+                  alt="add videos"
+                  width={16}
+                  height={16}
+                  className="absolute left-9 top-2 cursor-pointer"
+                />
+              </label>
 
-        <Button type="submit" size="lg" className="rounded-4xl">
-          Click me
-        </Button>
-      </form>
-      <div></div>
+              {thevideos.length < 10 ? (
+                <>
+                  <Input
+                    onChange={handlefileselect}
+                    accept="video/*"
+                    type="file"
+                    id="videos"
+                    multiple
+                    hidden
+                     disabled={thevideos.length >= 10}
+                  ></Input>
+                </>
+              ) : (
+                <></>
+              )}
+
+              <Input
+                value={prompt}
+                onChange={(e) => setprompt(e.target.value)}
+                type="text"
+                placeholder="Write your prompt"
+                className="text-black pl-16"
+              />
+
+              <Button
+                type="submit"
+                size="sm"
+                className="rounded-4xl absolute right-1 cursor-pointer"
+              >
+                <Image src={send} alt="send" width={16} height={16} />
+              </Button>
+            </form>
+          </div>
+          <div className="flex mt-7 mr-12">
+            {thevideos.map((files, index) =>
+              index < 3 ? (
+                <video
+                  key={index}
+                  src={URL.createObjectURL(files)}
+                  className="w-46 h-46 rounded-lg object-cover"
+                  controls
+                  alt=""
+                />
+              ) : null
+            )}
+
+            {thevideos.length > 3 ? <p className={`${lexendgiga.className} pt-16 pl-5 text-2xl `}>+{thevideos.length - 3}</p> : null}
+          </div>
+        </div>
+      </div>
+      <Allprojects/>
+      <Footers/>
     </div>
   );
 };

@@ -21,6 +21,39 @@ cloudinary.config({
 
 })
 
+export async function GET(request) {
+   await connectDB();
+   try {
+      const userid = request.nextUrl.searchParams.get("id");
+      const input = await InputModel.findById(userid)
+      return NextResponse.json({success:true, input})
+   }
+   catch (error) {
+       console.error("GET /api/input error:", error);
+      return NextResponse.json(
+        { success: false, message: error.message },
+        { status: 500 }
+      );
+   }
+}
+
+// export async function GET(request) {
+//    try {
+//       await connectDB();
+//       console.log("DB connected successfully"); // Add this
+      
+//       const input = await InputModel.find({});
+//       console.log("Found inputs:", input); // Add this
+      
+//       return NextResponse.json({ input })
+//    } catch (error) {
+//       console.error("GET Error:", error); // More detailed logging
+//       return NextResponse.json({ 
+//          error: error.message,
+//          stack: error.stack 
+//       }, { status: 500 })
+//    }
+// }
 
 export async function POST(request) {
    console.log('API route hit');
@@ -60,18 +93,8 @@ export async function POST(request) {
    }
 }
 
-// export async function GET() {
-//    await connectDB();
-//    try {
-//       const input = await InputModel.find({});
-//       return NextResponse.json({ input })
-//    }
-//    catch (error) {
-//       console.log(error)
-//    }
 
 
-// }
 async function audioeditor(audio) {
    console.log("baaji")
    const arrayBuffer = await audio.arrayBuffer();
