@@ -8,17 +8,19 @@ import React, { useEffect, useState } from "react";
 import Signout from "./Signout";
 import Signin from "./Signin";
 import Signup from "./Signup";
-import GoogleSignin from "./Googlesignin";
-import { variantid } from "@/components/lemonsqueezyvariables";
-import axios from "axios";
+import Link from "next/link";
+
+import Pricing from "./Pricing";
 
 const Navbar = () => {
- const { setshowlogin, showlogin, email, freetiercount } = useReelContext();
+  const {
+    setshowlogin,
+    showlogin,
+    signin,
+    showpricingpopup,
+    setshowpricingpopup,
+  } = useReelContext();
   const { data: session, error, isPending } = useSession();
-  const [showpricingpopup,setshowpricingpopup] = useState();
-   const [subscriptionstatus, setsubscriptionstatus] = useState("free");
-    const [subscriptionId, setsubscriptionId] = useState("");
-    const [endat, setendat] = useState("");
 
   //session k ander saara data hoga of user database and session database
   //error k ander, agar koi problem hojayega to wo batayega kis wajah se
@@ -34,10 +36,10 @@ const Navbar = () => {
     console.log("All cookies:", document.cookie);
   }, []);
 
-  //this tells if the session is loaded
-  if (isPending) {
-    return <div>Loading session...</div>;
-  }
+  // //this tells if the session is loaded
+  // if (isPending) {
+  //   return <div>Loading session...</div>;
+  // }
 
   //why session failed to load
   if (error) {
@@ -45,40 +47,14 @@ const Navbar = () => {
     return <div>Session error: {error.message}</div>;
   }
 
-    const handlefreetier = async () => {
-      
-      console.log("in free tier");
-      const { data } = await axios.post("/api/freetier", {
-        email,
-        subscriptionId,
-        subscriptionstatus,
-        endat,
-        freetiercount,
-      });
-      if (data.success) {
-        console.log(data.message);
-      }
-    };
-
-    const handlePurchase = async () => {
-        const { data } = await axios.post("/api/checkout", {
-          variantid,
-          email,
-          subscriptionId,
-          subscriptionstatus,
-          freetiercount,
-          endat,
-        });
-        if (data.success) {
-          console.log("bro");
-          window.location.href = data.url; //for external redirect
-        }
-      };
-
   return (
     <div className="bg-black text-white">
-        <div className="flex justify-between pt-3 ">
-        <h1 className={`${glikerExpanded.className} text-2xl ml-14 `}>Riko</h1>
+      <div className="flex justify-between pt-3 ">
+        <Link href="/">
+          <h1 className={`${glikerExpanded.className} text-2xl ml-14 `}>
+            Riko
+          </h1>
+        </Link>
         <nav className="font-[lexendgiga] flex gap-20 text-[12px] mt-2 opacity-72">
           <a href="/">Home</a>
           <a href="#Demo">Demo</a>
@@ -86,14 +62,12 @@ const Navbar = () => {
           <a href="#Contact Us">Contact Us</a>
         </nav>
         <div>
-          <Button onClick={()=>setshowpricingpopup(true)} className=" text-[10px]">Pricing</Button>
-          {showpricingpopup?
-           <>
-           <Button onClick={handlefreetier}>Start Free trial Now</Button>
-            <Button onClick={handlePurchase}>Pro Plan</Button>
-          </> : 
-          <>
-          </>}
+          <Button
+            onClick={() => setshowpricingpopup(true)}
+            className=" text-[10px]"
+          >
+            Pricing
+          </Button>
           {session?.user ? (
             <Signout />
           ) : (
@@ -107,21 +81,24 @@ const Navbar = () => {
               </Button>
             </>
           )}
-
-          {showlogin ? (
-            <div>
-              <p>Not signed in</p>
-              <Signin />
-              <GoogleSignin />
-              <Signup />
-            </div>
-          ) : (
-            <></>
-          )}
         </div>
+        {showlogin ? (
+          <div className="absolute z-10 bg-[#00000090] size-full text-xs">
+            <div className="absolute right-150 top-20">
+              {signin ? <Signin /> : <Signup />}
+            </div>
+          </div>
+        ) : null}
+        {showpricingpopup ? (
+          <>
+            <Pricing />
+          </>
+        ) : (
+          <></>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

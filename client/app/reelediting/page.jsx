@@ -1,228 +1,219 @@
+"use client";
 
-"use client"
-
-import { useReelContext } from '@/Context/ReelContext';
-import { Player } from '@remotion/player';
-import React, { useEffect, useRef, useState } from 'react';
+import { useReelContext } from "@/Context/ReelContext";
+import { Player } from "@remotion/player";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import axios from "axios"
-import { ReelVideo } from './ReelVideo';
-import Navbar from '@/appcomponents/Navbar';
-import Footers from '@/appcomponents/Footers';
-import Link from 'next/link';
-import { glikerExpanded, lexendgiga } from '@/lib/fonts';
+import axios from "axios";
+import { ReelVideo } from "./ReelVideo";
+import Navbar from "@/appcomponents/Navbar";
+import Footers from "@/appcomponents/Footers";
+import Link from "next/link";
+import { glikerExpanded, lexendgiga } from "@/lib/fonts";
 
 export default function VideoPlayer() {
-    const context = useReelContext();
+  const context = useReelContext();
 
-    
-    // Guard clause - stop if no data
-    if (!context?.reelData?.metadata) {
-        return <div>Loading or redirecting...</div>;
+  // Guard clause - stop if no data
+  if (!context?.reelData?.metadata) {
+    return <div>Loading or redirecting...</div>;
+  }
+  const {
+    reelData,
+    audiourl,
+    videoUrls,
+    userid,
+    setfreetiercount,
+    freetiercount,
+    email,
+  } = context;
+  const duration = Math.round(Number(reelData?.metadata?.duration) || 100); // fallback 100
+  const playerRef = useRef(null);
+  const audioRef = useRef(null);
+  const [width, setwidth] = React.useState(360);
+  const [height, setheight] = React.useState(640);
+  const [ready, setready] = useState(false);
+  const [downloaded, setdownloaded] = useState(false);
+  const title = reelData?.metadata?.title;
+
+  const handleDownload = async () => {
+    setready(true);
+    const { data } = await axios.post(`/api/rendervideo`, {
+      title,
+      reelData,
+      audiourl,
+      videoUrls,
+      width,
+      height,
+      userid,
+    });
+
+    if (data?.reelurl) {
+      console.log("got the data 2", data);
+      console.log("got the reel 2", data.reelurl);
+
+      const response = await fetch(data.reelurl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${title}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      console.log("downloaded");
+      setdownloaded(true);
+      const newcount = freetiercount + 1;
+      setfreetiercount(newcount);
+      console.log(newcount);
+      await axios.put("/api/freetier", { freetiercount: newcount, email });
     }
-    const { reelData, audiourl, videoUrls, userid, setfreetiercount,freetiercount , email} = context
-    const duration = Math.round(Number(reelData?.metadata?.duration) || 100); // fallback 100
-    const playerRef = useRef(null);
-    const audioRef = useRef(null);
-    const [width, setwidth] = React.useState(360);
-    const [height, setheight] = React.useState(640);
-    const [ready,setready] = useState(false)
-    const title = reelData?.metadata?.title
+  };
 
+  // Audio sync with player
+  useEffect(() => {
+    if (!playerRef.current || !audioRef.current || !audiourl) return;
 
-    const choosequality = (num) => {
-        if (num === 1080) {
-            setwidth(1080);
-            setheight(1920)
-        }
-        else if (num === 720) {
-            setwidth(720);
-            setheight(1280)
-        }
-        else {
-            setwidth(360);
-            setheight(640)
-        }
-    }
+    const player = playerRef.current;
+    const audio = audioRef.current;
+    let animationFrameId;
 
-    const handleDownload = async () => {
-        setready(true)
-        console.log("hi", width, height)
-        const { data } = await axios.post(`/api/rendervideo`, {
-            title,
-            reelData,
-            audiourl,
-            videoUrls,
-            width,
-            height,
-            userid,
+    const syncAudio = () => {
+      if (!player || !audio) return;
+
+      try {
+        const currentFrame = player.getCurrentFrame();
+        const expectedTime = currentFrame / 30; // 30 FPS
+
+        // Sync audio with video time
+        if (Math.abs(audio.currentTime - expectedTime) > 0.15) {
+          audio.currentTime = expectedTime;
+        }
+
+        // Keep syncing while playing
+        if (!audio.paused) {
+          animationFrameId = requestAnimationFrame(syncAudio); //Syncs with browser's refresh rate (~60 FPS)
+        }
+      } catch (error) {
+        console.log("Sync error:", error);
+      }
+    };
+
+    // Handle play/pause
+    const handlePlay = () => {
+      const currentFrame = player.getCurrentFrame();
+      audio.currentTime = currentFrame / 30;
+
+      audio
+        .play()
+        .then(() => {
+          syncAudio();
         })
+        .catch((err) => console.log("Audio play error:", err));
+    };
 
-        if (data?.reelurl) {
-            console.log("got the data 2", data)
-            console.log("got the reel 2", data.reelurl)
+    const handlePause = () => {
+      audio.pause();
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
 
-            const response = await fetch(data.reelurl);
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
+    // Monitor player state changes
+    const checkInterval = setInterval(() => {
+      const isPlaying = player.isPlaying?.();
 
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${title}.mp4`;
-            document.body.appendChild(a);
-            a.click();
+      if (isPlaying && audio.paused) {
+        handlePlay();
+      } else if (!isPlaying && !audio.paused) {
+        handlePause();
+      }
+    }, 100);
 
-            a.remove();
-            window.URL.revokeObjectURL(url);
-            console.log("downloaded")
-            const newcount = freetiercount + 1
-            setfreetiercount(newcount)
-            console.log(newcount)
-            await axios.put('/api/freetier', {freetiercount: newcount, email})
-        }
-    }
+    return () => {
+      clearInterval(checkInterval);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    };
+  }, [audiourl]);
 
-    // Audio sync with player
-    useEffect(() => {
-        if (!playerRef.current || !audioRef.current || !audiourl) return;
+  return (
+    <div className="bg-black text-white ">
+      <Navbar />
 
-        const player = playerRef.current;
-        const audio = audioRef.current;
-        let animationFrameId;
-
-        const syncAudio = () => {
-            if (!player || !audio) return;
-
-            try {
-                const currentFrame = player.getCurrentFrame();
-                const expectedTime = currentFrame / 30; // 30 FPS
-                
-                // Sync audio with video time
-                if (Math.abs(audio.currentTime - expectedTime) > 0.15) {
-                    audio.currentTime = expectedTime;
-                }
-
-                // Keep syncing while playing
-                if (!audio.paused) {
-                    animationFrameId = requestAnimationFrame(syncAudio); //Syncs with browser's refresh rate (~60 FPS)
-                }
-            } catch (error) {
-                console.log('Sync error:', error);
-            }
-        };
-
-        // Handle play/pause
-        const handlePlay = () => {
-            const currentFrame = player.getCurrentFrame();
-            audio.currentTime = currentFrame / 30;
-            
-            audio.play()
-                .then(() => {
-                    syncAudio();
-                })
-                .catch(err => console.log('Audio play error:', err));
-        };
-
-        const handlePause = () => {
-            audio.pause();
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
-        };
-
-        // Monitor player state changes
-        const checkInterval = setInterval(() => {
-            const isPlaying = player.isPlaying?.();
-            
-            if (isPlaying && audio.paused) {
-                handlePlay();
-            } else if (!isPlaying && !audio.paused) {
-                handlePause();
-            }
-        }, 100);
-
-        return () => {
-            clearInterval(checkInterval);
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
-            if (audio) {
-                audio.pause();
-                audio.currentTime = 0;
-            }
-        };
-    }, [audiourl]);
-
-    return (
-        <div className='bg-black text-white '>
-            <Navbar/>
-
-          <div  className="mt-10 pb-32 flex flex-col items-center">
+      <div className="mt-10 pb-32 flex flex-col items-center">
         <div className="pt-8 bg-gradient-to-b from-neutral-800 to-zinc-600 w-[700px] h-[780px] rounded-3xl flex flex-col items-center text-center">
-                {/* Hidden audio for preview - ye preview mein chalega */}
-            {audiourl && (
-                <audio 
-                    ref={audioRef} 
-                    src={audiourl} 
-                    style={{ display: 'none' }}
-                />
-            )}
+          {/* Hidden audio for preview - ye preview mein chalega */}
+          {audiourl && (
+            <audio ref={audioRef} src={audiourl} style={{ display: "none" }} />
+          )}
 
-            <div className='flex flex-col items-center'>
-                <h1 className={`${glikerExpanded.className} text-2xl pb-8`}>Your reel is ready!</h1>
-                  <Player
-                  className='rounded-4xl'
-                acknowledgeRemotionLicense
-                ref={playerRef}
-                component={ReelVideo}
-                inputProps={{ 
-                    reelData, 
-                    audiourl: null, // Preview mein null, render mein original audiourl use hoga
-                    videoUrls, 
-                    width, 
-                    height 
-                }}
-                durationInFrames={(duration * 30)}
-                compositionWidth={width}      
-                compositionHeight={height}
-                fps={30}
-                controls
-                clickToPlay
-                autoPlay={false}
-                style={{
-                    width: 300,
-                    height: 500
-                }}
+          <div className="flex flex-col items-center">
+            <h1 className={`${glikerExpanded.className} text-2xl pb-8`}>
+              Your reel is ready!
+            </h1>
+            <Player
+              className="rounded-4xl"
+              acknowledgeRemotionLicense
+              ref={playerRef}
+              component={ReelVideo}
+              inputProps={{
+                reelData,
+                audiourl: null, // Preview mein null, render mein original audiourl use hoga
+                videoUrls,
+                width,
+                height,
+              }}
+              durationInFrames={duration * 30}
+              compositionWidth={width}
+              compositionHeight={height}
+              fps={30}
+              controls
+              clickToPlay
+              autoPlay={false}
+              style={{
+                width: 300,
+                height: 500,
+              }}
             />
 
-            
             <div className="mt-10 space-x-2 flex">
-                <Link href="/Panel/Reelgenerator">
-                <Button size="lg" >Go Back</Button>
-                </Link>
-                <Button size="lg" onClick={handleDownload}>Download</Button>
-                
-                
+              <Link href="/Panel/Reelgenerator">
+                <Button size="lg">Go Back</Button>
+              </Link>
+              <Button size="lg" onClick={handleDownload}>
+                Download
+              </Button>
             </div>
-            {ready? 
-                <div className={`${lexendgiga.className} text-[10px] mt-7`}>
-                    <p>Your video is getting downloaded! <br/> It can take up to 2-3 minutes
-                    </p>
-                   
-                </div> : null}
-
-            </div>
-
-
-            </div>
-            </div>
-            
-          <Footers/>
-            
+            {ready && !downloaded ? (
+              <div className={`${lexendgiga.className} text-[10px] mt-7`}>
+                <p>
+                  Your video is getting downloaded! <br /> It can take up to 2-3
+                  minutes
+                </p>
+              </div>
+            ) : null}
+            {ready && downloaded ? (
+              <div className={`${lexendgiga.className} text-[10px] mt-7`}>
+                <p>Your reel is downloaded!</p>
+              </div>
+            ) : null}
+          </div>
         </div>
-    );
-}
+      </div>
 
+      <Footers />
+    </div>
+  );
+}
 
 // What is ref?
 // ref is like a sticky note that you attach to an element so you can find it and control it later.
@@ -233,12 +224,11 @@ export default function VideoPlayer() {
 // useRef - Persists across renders
 //const audioRef = useRef(null);  // ✅ =This keeps its value even when component re-renders
 
-//const playerRef = useRef(null); 
+//const playerRef = useRef(null);
 // playerRef = null
 
 // playerRef = { current: null }
 // audioRef = { current: null }
-
 
 //sab se pehlay audioref aur player-ref dono null hain
 //wo jb return main ghussa to usne Html ka audio element dekha where ref={audioref} to ref ne sticky note lagadia audio element per
@@ -247,14 +237,12 @@ export default function VideoPlayer() {
 //jesay hi wo Player component main ayega ref={setPlayerref} hogaya to matlab ref ne sticky note lagadia Playercomponent per
 //ab jo playerref=<Player>  (iska matlab <Player> ye component k ander jo bhi functionalities hain wo player-ref use kersakta)
 //now kyun k player-ref change hua aur use effect player ref per depend kerta hai to ab useeffect chalay ga foran
-//user click kareyga play per to handleplay() chalay ga 
+//user click kareyga play per to handleplay() chalay ga
 //agar play hai to handleplay ka function chalayga us k ander play hotay hi syncAudio kareyingy
 //chcak kareyingy k jo time hona chahiye aur jo time audio ka hai us main bht drift hai to audio=expected time kerdeingy
 //aur ye baar baar kareingy through request animation frame kyun k wo sync kerta hai browser k refresh rate k saath
 //ye ek tarhan ka loop hota hai hota rahay ga aesa unless pause ka button dabaya ho
-//pause daba ker ye chalay ga k koi animation frame id ha to cancel kerday sync kerna 
-
-
+//pause daba ker ye chalay ga k koi animation frame id ha to cancel kerday sync kerna
 
 //audio component k ander ye built in methods hotay hain
 

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useReelContext } from "@/Context/ReelContext";
 import { useRouter } from "next/navigation";
 import Navbar from "@/appcomponents/Navbar";
-import { bricebold, glikerExpanded, lexendgiga } from "@/lib/fonts";
+import { glikerExpanded, lexendgiga } from "@/lib/fonts";
 import plus from "@/Assets/plus.png";
 import send from "@/Assets/send.png";
 import catpanel from "@/Assets/catpanel.png";
@@ -15,6 +15,16 @@ import audioicon from "@/Assets/audio.png";
 import Image from "next/image";
 import Allprojects from "@/appcomponents/Allprojects";
 import Footers from "@/appcomponents/Footers";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 //we are uploading to cloud first and then sending the urls to backhend so it will reduce upload time
 
@@ -28,17 +38,15 @@ const Checker = () => {
   const [cancelproplan, setcancelproplan] = useState(false);
 
   const [thevideos, setthevideos] = useState([]);
+   const [thepreviews, setthepreviews] = useState([]);
   const { userid, setreelData, setvideoUrls, setaudiourl, setfreetiercount } =
     useReelContext();
   const router = useRouter();
   const [audio, setaudio] = useState();
 
   let uploadResults, getSubscription, openaireply;
-      
-    
-      const [projecturls, setprojecturls] = useState("")
-  
-  
+
+  const [projecturls, setprojecturls] = useState("");
 
   const fetchsubsdata = async () => {
     const { data } = await axios.get("/api/freetier");
@@ -117,7 +125,7 @@ const Checker = () => {
     await fetchsubsdata();
     if (
       getSubscription[0].subscriptionstatus === "free" &&
-      getSubscription[0].freetiercount < 3
+      getSubscription[0].freetiercount < 4
     ) {
       console.log("free");
       console.log(getSubscription[0].freetiercount);
@@ -125,7 +133,7 @@ const Checker = () => {
       // setfreetier(true);
     } else if (
       getSubscription[0].subscriptionstatus === "free" &&
-      getSubscription[0].freetiercount === 3
+      getSubscription[0].freetiercount === 4
     ) {
       console.log("free ended");
       setfreetierended(true);
@@ -138,14 +146,14 @@ const Checker = () => {
       setproplanactive(true);
     } else if (
       getSubscription[0].subscriptionstatus === "expired" &&
-      getSubscription[0].freetiercount === 3
+      getSubscription[0].freetiercount === 4
     ) {
       console.log("pro ended");
       setupdateproplan(true);
       return;
     } else if (
       getSubscription[0].subscriptionstatus === "expired" &&
-      getSubscription[0].freetiercount < 3
+      getSubscription[0].freetiercount < 4
     ) {
       console.log("free started again");
       setfreetiercount(getSubscription[0].freetiercount);
@@ -197,6 +205,7 @@ const Checker = () => {
   //FormData for files, JSON for URLs/text!
   const handlefileselect = (e) => {
     const selectedfiles = Array.from(e.target.files);
+    const forpreviews = selectedfiles.map((item)=> URL.createObjectURL(item) )
     //now since multiple files can be selected so we change the slectedfiles we get into array and put it into slectedfiles array
     setthevideos((prevVideos) => {
       const remainingslots = 10 - prevVideos.length;
@@ -204,30 +213,31 @@ const Checker = () => {
       //spreads the old array and the new array into one single array.
       //only max of 10 can be uploaded
     });
-  };
 
-  
+    setthepreviews((prevPreview)=>{
+      const remainingslots = 10 - prevPreview.length;
+      return [...prevPreview, ...forpreviews.slice(0, remainingslots)];
+    })
+   
+  };
 
   //will work only when it is live
   const handlerCustomerPortal = () => {
     window.location.href = " https://reelgenerator.lemonsqueezy.com/billing";
   };
 
-  
-
   return (
     <div id="Createproject" className="bg-black text-white">
-
       <Navbar />
       {/* <Button onClick={handlerCustomerPortal}>Customer Portal</Button> */}
-      <div  className="mt-8 pb-24 flex flex-col items-center">
+      <div className="mt-8 pb-24 flex flex-col items-center">
         <div className="pt-8 bg-gradient-to-b from-neutral-800 to-zinc-600 w-[700px] h-[550px] rounded-3xl flex flex-col items-center text-center">
           <p className={`${glikerExpanded.className} text-4xl pb-4 pt-12`}>
             Got an idea? <br /> Drop it here and we'll turn <br /> it into magic
           </p>
 
           <div className="flex flex-col">
-            <div className="absolute top-18.5 left-[245px]">
+            <div className="absolute top-18.5 left-[340px]">
               <Image src={catpanel} alt="cat" width={430} height={430} />
             </div>
 
@@ -239,6 +249,7 @@ const Checker = () => {
                   width={16}
                   height={16}
                   className="absolute left-3 top-2 cursor-pointer"
+                  required
                 />
               </label>
               <Input
@@ -268,7 +279,7 @@ const Checker = () => {
                     id="videos"
                     multiple
                     hidden
-                     disabled={thevideos.length >= 10}
+                    disabled={thevideos.length >= 10}
                   ></Input>
                 </>
               ) : (
@@ -292,12 +303,28 @@ const Checker = () => {
               </Button>
             </form>
           </div>
+          
+           
+              <Dialog open={freetierended} onOpenChange={setfreetierended}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Your Free tier has ended</DialogTitle>
+                    <DialogDescription>
+                      You’ve reached the limit of your free plan. To continue
+                      enjoying all features, please upgrade to a premium plan.
+                      Don’t worry — it’s quick and easy!
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+            
+         
           <div className="flex mt-7 mr-12">
-            {thevideos.map((files, index) =>
+            {thepreviews.map((files, index) =>
               index < 3 ? (
                 <video
                   key={index}
-                  src={URL.createObjectURL(files)}
+                  src={files}
                   className="w-46 h-46 rounded-lg object-cover"
                   controls
                   alt=""
@@ -305,12 +332,16 @@ const Checker = () => {
               ) : null
             )}
 
-            {thevideos.length > 3 ? <p className={`${lexendgiga.className} pt-16 pl-5 text-2xl `}>+{thevideos.length - 3}</p> : null}
+            {thevideos.length > 3 ? (
+              <p className={`${lexendgiga.className} pt-16 pl-5 text-2xl `}>
+                +{thevideos.length - 3}
+              </p>
+            ) : null}
           </div>
         </div>
       </div>
-      <Allprojects/>
-      <Footers/>
+      <Allprojects />
+      <Footers />
     </div>
   );
 };

@@ -9,8 +9,11 @@ import headerimg22 from "@/Assets/headerimg22.png";
 import Link from "next/link";
 import React from "react";
 import Navbar from "./Navbar";
+import { useSession } from "@/lib/auth-client";
 
 const TopSection = () => {
+  const { data: session } = useSession();;
+
   return (
     <div className="bg-black text-white pb-32">
       <Navbar />
@@ -36,11 +39,18 @@ const TopSection = () => {
             ready to grab attention <br /> without you stressing over editing
             apps, music syncing, or awkward transitions.
           </p>
-          <Link href="/Panel/Reelgenerator">
+          {session?.user ? (
+            <Link href="/Panel/Reelgenerator">
+              <Button className=" text-[12px] mt-3 hover:bg-gray-200" size="lg">
+                Start Now
+              </Button>
+            </Link>
+          ) : (
             <Button className=" text-[12px] mt-3 hover:bg-gray-200" size="lg">
-              Start Now
-            </Button>
-          </Link>
+                Start Now
+              </Button>
+            
+          )}
         </div>
         <div className="mt-8">
           <div className="relative w-80 h-80 flex">

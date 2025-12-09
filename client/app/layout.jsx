@@ -1,9 +1,7 @@
-import { Geist, Geist_Mono, Lexend_Giga } from "next/font/google";
+import { Geist, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import ReelContextProvider from "@/Context/ReelContext";
-
-
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +12,9 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-const lexendgiga = Lexend_Giga({
-  variable: "--font-lexend-giga",
+const poppins = Poppins({
+  variable: "--font-poppins",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -28,12 +27,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${lexendgiga.variable} ${geistMono.variable}  antialiased`}
+        className={`${geistSans.variable} ${poppins.variable} ${geistMono.variable}  antialiased`}
       >
-          <ReelContextProvider>
-        {children}
-        </ReelContextProvider>
-         <Toaster/>
+        <ReelContextProvider>{children}</ReelContextProvider>
+        <Toaster />
       </body>
     </html>
   );

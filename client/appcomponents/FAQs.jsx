@@ -27,22 +27,26 @@ const FAQs = () => {
   ];
   let count = 0;
   return (
-    <div className="text-white bg-black  pb-24">
+    <div id="FAQs" className="text-white bg-black  pb-24">
       <h1 className={`${glikerExpanded.className} text-center text-3xl pb-16`}>
         FAQs
       </h1>
       <div className="w-[600px] h-[400px] mx-auto">
-          <Accordion type="single" collapsible>
-        {questions.map((question, index) => (
-          <AccordionItem key={index} value={`item-${index + 1}`}>
-            <AccordionTrigger className={`${lexendgiga.className}`} >{question}</AccordionTrigger>
-            <AccordionContent className={`${lexendgiga.className} opacity-80 text-[12px]`} >{answers[index]}</AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-
+        <Accordion type="single" collapsible>
+          {questions.map((question, index) => (
+            <AccordionItem key={index} value={`item-${index + 1}`}>
+              <AccordionTrigger className={`${lexendgiga.className}`}>
+                {question}
+              </AccordionTrigger>
+              <AccordionContent
+                className={`${lexendgiga.className} opacity-80 text-[12px]`}
+              >
+                {answers[index]}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
-    
     </div>
   );
 };

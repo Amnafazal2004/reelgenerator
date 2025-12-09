@@ -1,7 +1,7 @@
-"use client"
+"use client";
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";  // your client wrapper
+import { authClient } from "@/lib/auth-client"; // your client wrapper
 import { toast } from "sonner";
 
 const Signout = () => {
@@ -16,7 +16,13 @@ const Signout = () => {
   };
 
   return (
-    <Button onClick={handleSignOut} className="mr-24 text-[10px]" variant="custom1">Sign Out</Button>
+    <Button
+      onClick={handleSignOut}
+      className="mr-24 text-[10px]"
+      variant="custom1"
+    >
+      Sign Out
+    </Button>
   );
 };
 
