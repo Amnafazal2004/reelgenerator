@@ -125,7 +125,7 @@ const Checker = () => {
     await fetchsubsdata();
     if (
       getSubscription[0].subscriptionstatus === "free" &&
-      getSubscription[0].freetiercount < 4
+      getSubscription[0].freetiercount < 7
     ) {
       console.log("free");
       console.log(getSubscription[0].freetiercount);
@@ -133,7 +133,7 @@ const Checker = () => {
       // setfreetier(true);
     } else if (
       getSubscription[0].subscriptionstatus === "free" &&
-      getSubscription[0].freetiercount === 4
+      getSubscription[0].freetiercount === 7
     ) {
       console.log("free ended");
       setfreetierended(true);
@@ -146,14 +146,14 @@ const Checker = () => {
       setproplanactive(true);
     } else if (
       getSubscription[0].subscriptionstatus === "expired" &&
-      getSubscription[0].freetiercount === 4
+      getSubscription[0].freetiercount === 7
     ) {
       console.log("pro ended");
       setupdateproplan(true);
       return;
     } else if (
       getSubscription[0].subscriptionstatus === "expired" &&
-      getSubscription[0].freetiercount < 4
+      getSubscription[0].freetiercount < 7
     ) {
       console.log("free started again");
       setfreetiercount(getSubscription[0].freetiercount);
