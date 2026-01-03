@@ -11,8 +11,9 @@ import React from "react";
 import Navbar from "./Navbar";
 import { useSession } from "@/lib/auth-client";
 
+
 const TopSection = () => {
-  const { data: session } = useSession();;
+   const { data: session } = useSession();
 
   return (
     <div className="bg-black text-white pb-32">
@@ -40,17 +41,18 @@ const TopSection = () => {
             apps, music syncing, or awkward transitions.
           </p>
           {session?.user ? (
-            <Link href="/Panel/Reelgenerator">
+             <Link href="/Panel/Reelgenerator">
               <Button className=" text-[12px] mt-3 hover:bg-gray-200" size="lg">
-                Start Now
+                Start Free Now
               </Button>
-            </Link>
+             </Link> 
           ) : (
             <Button className=" text-[12px] mt-3 hover:bg-gray-200" size="lg">
                 Start Now
-              </Button>
+            </Button>
             
           )}
+          
         </div>
         <div className="mt-8">
           <div className="relative w-80 h-80 flex">

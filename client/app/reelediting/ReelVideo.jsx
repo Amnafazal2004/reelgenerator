@@ -69,6 +69,7 @@ export function ReelVideo({ reelData, audiourl, videoUrls, height }) {
                         key={`preload-${i}`}
                         src={url}
                         style={{ display: "none" }} // invisible preload
+                        muted={true}
                     />
                 ))
             }
@@ -166,7 +167,7 @@ export function ReelVideo({ reelData, audiourl, videoUrls, height }) {
                                 style={sceneStyle}
                                 preload="auto"
                                 pauseWhenBuffering={false}     
-                                muted
+                                muted={true}
                             />
                         </Sequence>
                     </div>

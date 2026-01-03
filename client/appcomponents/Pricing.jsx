@@ -8,11 +8,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useReelContext } from "@/Context/ReelContext";
 import { variantid } from "@/components/lemonsqueezyvariables";
 import axios from "axios";
-import { lexendgiga } from "@/lib/fonts";
 
 const Pricing = () => {
   const { email, freetiercount, showpricingpopup, setshowpricingpopup } =
@@ -22,8 +31,10 @@ const Pricing = () => {
   const [subscriptionId, setsubscriptionId] = useState("");
   const [endat, setendat] = useState("");
   const [notsignedin, setnotsignedin] = useState(false);
-
+  const [infreetier, setinfreetier] = useState(false);
   const handlefreetier = async () => {
+    setshowpricingpopup(false)
+    setinfreetier(false)
     if (!session?.user) {
       setnotsignedin(true);
       return;
@@ -68,9 +79,7 @@ const Pricing = () => {
             <DialogTitle className={` text-center text-2xl pt-4`}>
               Choose your plan, unleash your creativity.
             </DialogTitle>
-            <DialogDescription
-              className={` text-[10px] text-center`}
-            >
+            <DialogDescription className={` text-[10px] text-center`}>
               Whether you're experimenting or building an empire, we got you.
               Unlock the tools <br /> that make your content hit different
             </DialogDescription>
@@ -84,9 +93,28 @@ const Pricing = () => {
                   <li>✔️ Access to all basic editing tools</li>
                   <li>✔️ No credit card required</li>
                 </ul>
-                <Button onClick={handlefreetier} size="lg" className="mt-6 ">
-                  Start Free Now
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger onClick={()=>setinfreetier(true)} className="mt-6 h-9 rounded-3xl px-16 bg-white text-black shadow-xs hover:bg-gray-200 font-[poppins] text-sm">
+                      Start Free Now
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Confirming this action will start your free trial
+                        immediately. This cannot be undone, and your current
+                        progress or settings may be affected.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction  onClick={handlefreetier}
+                      >Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
 
               <div className="border  rounded-3xl p-7">
@@ -98,7 +126,7 @@ const Pricing = () => {
                   <li>✔️ Full aesthetic control</li>
                   <li>✔️ Zero watermark</li>
                 </ul>
-                <Button onClick={handlePurchase} size="lg" className="mt-6 ">
+                <Button onClick={handlePurchase} size="lg" className="mt-6 font-[poppins]">
                   Purchase Pro
                 </Button>
               </div>
@@ -111,6 +139,21 @@ const Pricing = () => {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {infreetier ? (
+        <Dialog>
+          <DialogContent className=" bg-black text-white ">
+            <DialogHeader>
+              <DialogTitle className={` text-center text-2xl pt-4`}>
+                Free Trial
+              </DialogTitle>
+              <DialogDescription className={` text-[10px] text-center`}>
+                Your free trial has started
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </div>
   );
 };

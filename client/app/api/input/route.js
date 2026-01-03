@@ -37,24 +37,6 @@ export async function GET(request) {
    }
 }
 
-// export async function GET(request) {
-//    try {
-//       await connectDB();
-//       console.log("DB connected successfully"); // Add this
-      
-//       const input = await InputModel.find({});
-//       console.log("Found inputs:", input); // Add this
-      
-//       return NextResponse.json({ input })
-//    } catch (error) {
-//       console.error("GET Error:", error); // More detailed logging
-//       return NextResponse.json({ 
-//          error: error.message,
-//          stack: error.stack 
-//       }, { status: 500 })
-//    }
-// }
-
 export async function POST(request) {
    console.log('API route hit');
    try {

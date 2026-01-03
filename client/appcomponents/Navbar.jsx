@@ -42,10 +42,10 @@ const Navbar = () => {
   // }
 
   //why session failed to load
-  if (error) {
-    console.error("Session error:", error);
-    return <div>Session error: {error.message}</div>;
-  }
+  // if (error) {
+  //   console.error("Session error:", error);
+  //   return <div>Session error: {error.message}</div>;
+  // }
 
   return (
     <div className="bg-black text-white">

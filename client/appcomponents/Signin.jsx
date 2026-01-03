@@ -35,10 +35,12 @@ const Signin = () => {
   });
 
   const handleGoogleSignin = async () => {
+    setsignin(false)
+    setsignup(false)
     try {
       await authClient.signIn.social({
         provider: "google",
-        // callbackURL: "/dashboard", // Redirect after signin
+        // callbackURL: "/Panel/Reelgenerator", // Redirect after signin
       });
     } catch (error) {
       console.error("Google signin error:", error);
@@ -67,6 +69,7 @@ const Signin = () => {
 
   async function onSubmit(values) {
     console.log(values);
+    setshowlogin(false)
     fetchlogin(values);
   }
   return (

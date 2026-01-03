@@ -34,6 +34,7 @@ const Signup = () => {
   const { setsignin, setsignup, setshowlogin } = useReelContext();
 
   async function onSubmit(values) {
+    setshowlogin(false)
     console.log(values);
     try {
       const response = await authClient.signUp.email({
@@ -97,7 +98,7 @@ const Signup = () => {
               />
               <FormField
                 control={form.control}
-                name="username"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Username</FormLabel>

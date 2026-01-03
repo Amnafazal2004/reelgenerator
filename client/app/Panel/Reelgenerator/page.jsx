@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/appcomponents/Navbar";
 import { glikerExpanded, lexendgiga } from "@/lib/fonts";
 import plus from "@/Assets/plus.png";
-import send from "@/Assets/send.png";
+import send from "@/Assets/send.png"
 import catpanel from "@/Assets/catpanel.png";
 import audioicon from "@/Assets/audio.png";
 import Image from "next/image";
@@ -31,6 +31,7 @@ import {
 const Checker = () => {
   let count = 4;
   const [prompt, setprompt] = useState("");
+  const [sent,setsent] = useState(false)
   const [endat, setendat] = useState("");
   const [freetierended, setfreetierended] = useState(false);
   const [proplanactive, setproplanactive] = useState(false);
@@ -114,6 +115,7 @@ const Checker = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    setsent(true)
 
     console.log("userid from context:", userid);
 
@@ -302,6 +304,9 @@ const Checker = () => {
                 <Image src={send} alt="send" width={16} height={16} />
               </Button>
             </form>
+            {sent?
+            <p className="pt-3 text-[10px]">Your reel is in process <br /> It may take a few minutes...</p>
+            : null}
           </div>
           
            
